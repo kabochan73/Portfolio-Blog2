@@ -6,7 +6,15 @@ const PROFILE = {
   bio: "Laravel と Next.js を中心に学習・開発しています。技術のアウトプットや、日々の学びをこのブログにまとめています。",
 };
 
-export function Sidebar({ tags, counts }: { tags: Tag[]; counts: Record<number, number> }) {
+type SidebarProps = {
+  tags: Tag[];
+  counts: Record<number, number>;
+  /** When provided, tags become clickable and the matching one is highlighted. */
+  selectedKey?: string;
+  onSelect?: (key: string) => void;
+};
+
+export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
   return (
     <aside className="flex w-full flex-col gap-4 sm:w-72">
       <div className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -23,14 +31,40 @@ export function Sidebar({ tags, counts }: { tags: Tag[]; counts: Record<number, 
       <div className="rounded-xl border border-zinc-200 bg-white p-4">
         <p className="mb-2 text-sm font-semibold text-zinc-900">TAGS</p>
         <ul className="flex flex-col">
-          {tags.map((tag) => (
-            <li key={tag.id}>
-              <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-zinc-700">
+          {tags.map((tag) => {
+            const key = String(tag.id);
+            const isSelected = selectedKey === key;
+
+            const content = (
+              <>
                 <span>{tag.name}</span>
                 <span className="text-zinc-400">{counts[tag.id] ?? 0}</span>
-              </div>
-            </li>
-          ))}
+              </>
+            );
+
+            return (
+              <li key={tag.id}>
+                {onSelect ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(key)}
+                    aria-pressed={isSelected}
+                    className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                      isSelected
+                        ? "bg-zinc-900 text-white"
+                        : "text-zinc-700 hover:bg-zinc-100"
+                    }`}
+                  >
+                    {content}
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-zinc-700">
+                    {content}
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </aside>

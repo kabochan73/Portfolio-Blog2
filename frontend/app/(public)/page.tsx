@@ -1,5 +1,4 @@
-import { PostList } from "@/components/posts/PostList";
-import { Sidebar } from "@/components/tags/Sidebar";
+import { PostBrowser } from "@/components/posts/PostBrowser";
 import { getPosts, getTags } from "@/lib/public/api";
 
 export default async function HomePage() {
@@ -13,15 +12,12 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 sm:flex-row">
-      <div className="flex-1">
-        <p className="text-sm font-semibold tracking-wide text-zinc-500">ARTICLES</p>
-        <h1 className="mt-1 text-2xl font-bold text-zinc-900">記事一覧</h1>
-        <div className="mt-6">
-          <PostList posts={posts} />
-        </div>
+    <div>
+      <p className="text-sm font-semibold tracking-wide text-zinc-500">ARTICLES</p>
+      <h1 className="mt-1 text-2xl font-bold text-zinc-900">記事一覧</h1>
+      <div className="mt-6">
+        <PostBrowser posts={posts} tags={tags} counts={counts} />
       </div>
-      <Sidebar tags={tags} counts={counts} />
     </div>
   );
 }
