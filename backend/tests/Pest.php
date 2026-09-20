@@ -44,7 +44,15 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Sanctum's EnsureFrontendRequestsAreStateful only treats a request as coming
+ * from the SPA (and thus eligible for cookie auth) when its Origin matches
+ * SANCTUM_STATEFUL_DOMAINS. Use this on requests that exercise the real
+ * login/logout HTTP flow.
+ *
+ * @return array<string, string>
+ */
+function fromFrontend(): array
 {
-    // ..
+    return ['Origin' => 'http://localhost:3000'];
 }
