@@ -2,6 +2,12 @@ export type ApiResponse<T> = {
   data: T;
 };
 
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+};
+
 export type PostStatus = "draft" | "published";
 
 export type Tag = {
