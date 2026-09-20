@@ -1,14 +1,7 @@
 import Link from "next/link";
 
+import { formatDate } from "@/lib/format";
 import type { Post } from "@/types";
-
-function formatDate(iso: string): string {
-  const date = new Date(iso);
-
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
-}
 
 export function PostList({ posts }: { posts: Post[] }) {
   if (posts.length === 0) {

@@ -1,4 +1,7 @@
-import type { Tag } from "@/types";
+import Link from "next/link";
+
+import { formatDate } from "@/lib/format";
+import type { Post, Tag } from "@/types";
 
 const PROFILE = {
   name: "Takumi",
@@ -12,9 +15,11 @@ type SidebarProps = {
   /** When provided, tags become clickable and the matching one is highlighted. */
   selectedKey?: string;
   onSelect?: (key: string) => void;
+  /** Shown as a third card when provided (post detail page only). */
+  related?: Post[];
 };
 
-export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
+export function Sidebar({ tags, counts, selectedKey, onSelect, related }: SidebarProps) {
   return (
     <aside className="flex w-full flex-col gap-4 sm:w-72">
       <div className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -67,6 +72,22 @@ export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
           })}
         </ul>
       </div>
+
+      {related && related.length > 0 ? (
+        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+          <p className="mb-2 text-sm font-semibold text-zinc-900">関連記事</p>
+          <ul className="flex flex-col gap-3">
+            {related.map((post) => (
+              <li key={post.id}>
+                <Link href={`/posts/${post.slug}`} className="block hover:underline">
+                  <p className="text-sm font-medium text-zinc-900">{post.title}</p>
+                  <p className="text-xs text-zinc-500">{formatDate(post.created_at)}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </aside>
   );
 }
