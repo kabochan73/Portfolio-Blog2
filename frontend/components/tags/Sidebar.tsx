@@ -1,7 +1,4 @@
-import Link from "next/link";
-
-import { formatDate } from "@/lib/format";
-import type { Post, Tag } from "@/types";
+import type { Tag } from "@/types";
 
 const PROFILE = {
   name: "Takumi",
@@ -12,14 +9,11 @@ const PROFILE = {
 type SidebarProps = {
   tags: Tag[];
   counts: Record<number, number>;
-  /** When provided, tags become clickable and the matching one is highlighted. */
-  selectedKey?: string;
-  onSelect?: (key: string) => void;
-  /** Shown as a third card when provided (post detail page only). */
-  related?: Post[];
+  selectedKey: string;
+  onSelect: (key: string) => void;
 };
 
-export function Sidebar({ tags, counts, selectedKey, onSelect, related }: SidebarProps) {
+export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
   return (
     <aside className="flex w-full flex-col gap-4 sm:w-72">
       <div className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -40,54 +34,26 @@ export function Sidebar({ tags, counts, selectedKey, onSelect, related }: Sideba
             const key = String(tag.id);
             const isSelected = selectedKey === key;
 
-            const content = (
-              <>
-                <span>{tag.name}</span>
-                <span className="text-zinc-400">{counts[tag.id] ?? 0}</span>
-              </>
-            );
-
             return (
               <li key={tag.id}>
-                {onSelect ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelect(key)}
-                    aria-pressed={isSelected}
-                    className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                      isSelected
-                        ? "bg-zinc-900 text-white"
-                        : "text-zinc-700 hover:bg-zinc-100"
-                    }`}
-                  >
-                    {content}
-                  </button>
-                ) : (
-                  <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-zinc-700">
-                    {content}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => onSelect(key)}
+                  aria-pressed={isSelected}
+                  className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                    isSelected ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
+                >
+                  <span>{tag.name}</span>
+                  <span className={isSelected ? "text-zinc-300" : "text-zinc-400"}>
+                    {counts[tag.id] ?? 0}
+                  </span>
+                </button>
               </li>
             );
           })}
         </ul>
       </div>
-
-      {related && related.length > 0 ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="mb-2 text-sm font-semibold text-zinc-900">関連記事</p>
-          <ul className="flex flex-col gap-3">
-            {related.map((post) => (
-              <li key={post.id}>
-                <Link href={`/posts/${post.slug}`} className="block hover:underline">
-                  <p className="text-sm font-medium text-zinc-900">{post.title}</p>
-                  <p className="text-xs text-zinc-500">{formatDate(post.created_at)}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
     </aside>
   );
 }
