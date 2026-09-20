@@ -120,8 +120,23 @@ class Post extends Model
 | `update` | `$user->id === $post->user_id` |
 | `delete` | `$user->id === $post->user_id` |
 
-`Admin\PostController`のコンストラクタで`$this->authorizeResource(Post::class, 'post')`を呼び、
-resourceルートの全アクション（`index/show/store/update/destroy`）に自動でPolicyメソッドをマッピングする。
+`Admin\PostController`は`HasMiddleware`インターフェースを実装し、静的な`middleware()`メソッドで
+`can:` ミドルウェアをアクションごとに`only`指定して割り当てる（Laravel 11以降はコントローラーに
+`$this->middleware()`インスタンスメソッドが無くなったため、`authorizeResource()`は使えない）。
+
+```php
+public static function middleware(): array
+{
+    return [
+        new Middleware('can:viewAny,'.Post::class, only: ['index']),
+        new Middleware('can:view,post', only: ['show']),
+        new Middleware('can:create,'.Post::class, only: ['store']),
+        new Middleware('can:update,post', only: ['update']),
+        new Middleware('can:delete,post', only: ['destroy']),
+    ];
+}
+```
+
 `store()`時は`$post->user_id`にログインユーザーIDを自動セット。
 
 実運用は単一管理者のみだが、Pestテストでは2ユーザーをfactoryで用意し、
