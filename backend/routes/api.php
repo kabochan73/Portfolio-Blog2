@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\PostController as AdminPostController;
+use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\TagController;
@@ -16,3 +18,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::get('/posts', [PostController::class, 'index']);
 Route::get('/posts/{slug}', [PostController::class, 'show']);
 Route::get('/tags', [TagController::class, 'index']);
+
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::apiResource('posts', AdminPostController::class);
+    Route::apiResource('tags', AdminTagController::class);
+});
