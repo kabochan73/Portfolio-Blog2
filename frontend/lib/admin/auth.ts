@@ -27,8 +27,17 @@ function getSnapshot(): AuthState {
   return state;
 }
 
+// Never read the mutable `state` module variable during SSR — Next.js can
+// serve concurrent requests from different users through this same module
+// instance, so a real snapshot here would leak one user's auth into another's
+// response. Always render "unknown" on the server; checkAuth() resolves the
+// real state after hydration.
+function getServerSnapshot(): AuthState {
+  return { status: "unknown" };
+}
+
 export function useAuthState(): AuthState {
-  return useSyncExternalStore(subscribe, getSnapshot);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export function setAuthenticatedUser(user: User): void {
