@@ -18,26 +18,23 @@ export default async function PostDetailPage({
   }
 
   return (
-    <div>
-      <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-700">
-        ← 一覧に戻る
-      </Link>
+    <div className="w-full max-w-4xl self-center px-4 py-8 sm:px-6 lg:px-8">
 
+
+      <h1 className="mt-3 text-3xl font-bold text-zinc-900">{post.title}</h1>
+      <time dateTime={post.created_at} className="mt-2 block text-sm text-zinc-500">
+        {formatDate(post.created_at)}
+      </time>
       <div className="mt-4 flex flex-wrap gap-2">
         {post.tags.map((tag) => (
           <span
             key={tag.id}
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600"
+            className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-bold text-white"
           >
             {tag.name}
           </span>
         ))}
       </div>
-
-      <h1 className="mt-3 text-2xl font-bold text-zinc-900">{post.title}</h1>
-      <time dateTime={post.created_at} className="mt-2 block text-sm text-zinc-500">
-        {formatDate(post.created_at)}
-      </time>
 
       {post.thumbnail_url ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -51,6 +48,10 @@ export default async function PostDetailPage({
       <div className="mt-8">
         <MarkdownContent>{post.body}</MarkdownContent>
       </div>
+
+      <Link href="/" className="flex justify-end text-lg  text-zinc-500 hover:text-zinc-700">
+        ← 一覧に戻る
+      </Link>
     </div>
   );
 }
