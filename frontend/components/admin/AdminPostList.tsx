@@ -14,46 +14,66 @@ export function AdminPostList({ posts, onDelete }: AdminPostListProps) {
   }
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-4">
       {posts.map((post) => (
         <li
           key={post.id}
-          className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3"
+          className="flex gap-4 rounded-xl border-2 border-zinc-400 bg-white p-4 shadow-[4px_4px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#18181b]"
         >
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
+          <div className="h-28 w-42 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+            {post.thumbnail_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={post.thumbnail_url} alt="" className="h-full w-full object-cover" />
+            ) : null}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col justify-between">
+            <div>
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${
                   post.status === "published"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-zinc-100 text-zinc-600"
+                    ? "bg-green-600 text-white"
+                    : "bg-zinc-200 text-zinc-700"
                 }`}
               >
                 {post.status === "published" ? "公開" : "下書き"}
               </span>
               <Link
                 href={`/admin/posts/${post.id}`}
-                className="truncate font-medium text-zinc-900 hover:underline"
+                className="mt-1 block truncate text-2xl font-semibold text-zinc-900 hover:underline"
               >
                 {post.title}
               </Link>
             </div>
-            <p className="mt-1 text-xs text-zinc-500">{formatDate(post.created_at)}</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <Link
-              href={`/admin/posts/${post.id}/edit`}
-              className="text-sm text-zinc-500 hover:text-zinc-900"
-            >
-              編集
-            </Link>
-            <button
-              type="button"
-              onClick={() => onDelete(post.id)}
-              className="text-sm text-red-600 hover:text-red-800"
-            >
-              削除
-            </button>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-600">
+                <time dateTime={post.created_at}>{formatDate(post.created_at)}</time>
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-bold text-white"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href={`/admin/posts/${post.id}/edit`}
+                  className="rounded-lg border-2 border-zinc-900 px-3 py-1 text-sm font-bold text-zinc-900 transition-colors hover:bg-zinc-900 hover:text-white"
+                >
+                  編集
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => onDelete(post.id)}
+                  className="rounded-lg border-2 border-red-600 px-3 py-1 text-sm font-bold text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+                >
+                  削除
+                </button>
+              </div>
+            </div>
           </div>
         </li>
       ))}
