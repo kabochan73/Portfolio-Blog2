@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,7 +31,18 @@ type PostFormProps = {
   onSubmit: (input: PostInput) => Promise<void>;
 };
 
+const inputClass =
+  "mt-1 w-full rounded-lg border-2 border-zinc-300 px-3 py-2 text-sm outline-none transition-colors focus:border-zinc-900";
+
+const pillButtonClass = (selected: boolean) =>
+  `rounded-full border-2 px-3 py-1 text-sm font-bold transition-colors ${
+    selected
+      ? "border-zinc-900 bg-zinc-900 text-white"
+      : "border-zinc-300 text-zinc-600 hover:border-zinc-900"
+  }`;
+
 export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormProps) {
+  const router = useRouter();
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>(
     initialPost?.tags.map((tag) => tag.id) ?? [],
@@ -41,6 +53,7 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
     register,
     handleSubmit,
     watch,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -54,6 +67,7 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
   });
 
   const body = watch("body");
+  const status = watch("status");
 
   function toggleTag(id: number) {
     setSelectedTagIds((prev) =>
@@ -84,70 +98,66 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
   }
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-6">
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-zinc-700">
+        <label htmlFor="title" className="block text-sm font-bold text-zinc-700">
           タイトル
         </label>
-        <input
-          id="title"
-          {...register("title")}
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-        />
+        <input id="title" {...register("title")} className={inputClass} />
         {errors.title ? <p className="mt-1 text-sm text-red-600">{errors.title.message}</p> : null}
       </div>
 
       <div>
-        <label htmlFor="slug" className="block text-sm font-medium text-zinc-700">
+        <label htmlFor="slug" className="block text-sm font-bold text-zinc-700">
           スラッグ
         </label>
-        <input
-          id="slug"
-          {...register("slug")}
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-        />
+        <input id="slug" {...register("slug")} className={inputClass} />
         {errors.slug ? <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p> : null}
       </div>
 
       <div>
-        <span className="block text-sm font-medium text-zinc-700">タグ</span>
-        <div className="mt-1 flex flex-wrap gap-3">
+        <span className="block text-sm font-bold text-zinc-700">タグ</span>
+        <div className="mt-2 flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <label key={tag.id} className="flex items-center gap-1 text-sm text-zinc-700">
-              <input
-                type="checkbox"
-                checked={selectedTagIds.includes(tag.id)}
-                onChange={() => toggleTag(tag.id)}
-              />
+            <button
+              key={tag.id}
+              type="button"
+              onClick={() => toggleTag(tag.id)}
+              aria-pressed={selectedTagIds.includes(tag.id)}
+              className={pillButtonClass(selectedTagIds.includes(tag.id))}
+            >
               {tag.name}
-            </label>
+            </button>
           ))}
         </div>
       </div>
 
       <div>
-        <label htmlFor="status" className="block text-sm font-medium text-zinc-700">
-          ステータス
-        </label>
-        <select
-          id="status"
-          {...register("status")}
-          className="mt-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-        >
-          <option value="draft">下書き</option>
-          <option value="published">公開</option>
-        </select>
+        <span className="block text-sm font-bold text-zinc-700">ステータス</span>
+        <div className="mt-2 flex gap-2">
+          {(["draft", "published"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setValue("status", value)}
+              aria-pressed={status === value}
+              className={pillButtonClass(status === value)}
+            >
+              {value === "draft" ? "下書き" : "公開"}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
-        <div className="flex gap-2 border-b border-zinc-200">
+        <div className="flex gap-2 border-b-2 border-zinc-200">
           <button
             type="button"
             onClick={() => setTab("edit")}
-            className={`px-3 py-2 text-sm ${
+            className={`-mb-0.5 px-3 py-2 text-sm font-bold transition-colors ${
               tab === "edit"
-                ? "border-b-2 border-zinc-900 font-medium text-zinc-900"
-                : "text-zinc-500"
+                ? "border-b-2 border-zinc-900 text-zinc-900"
+                : "text-zinc-400 hover:text-zinc-700"
             }`}
           >
             編集
@@ -155,10 +165,10 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
           <button
             type="button"
             onClick={() => setTab("preview")}
-            className={`px-3 py-2 text-sm ${
+            className={`-mb-0.5 px-3 py-2 text-sm font-bold transition-colors ${
               tab === "preview"
-                ? "border-b-2 border-zinc-900 font-medium text-zinc-900"
-                : "text-zinc-500"
+                ? "border-b-2 border-zinc-900 text-zinc-900"
+                : "text-zinc-400 hover:text-zinc-700"
             }`}
           >
             プレビュー
@@ -170,10 +180,10 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
             id="body"
             {...register("body")}
             rows={16}
-            className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 font-mono text-sm"
+            className="mt-3 w-full rounded-lg border-2 border-zinc-300 px-3 py-2 font-mono text-sm outline-none transition-colors focus:border-zinc-900"
           />
         ) : (
-          <div className="mt-2 rounded-lg border border-zinc-200 p-4">
+          <div className="mt-3 rounded-lg border-2 border-zinc-300 p-4">
             <MarkdownPreview>{body || "*本文がありません*"}</MarkdownPreview>
           </div>
         )}
@@ -182,13 +192,22 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
 
       {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="mt-2 self-start rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
-        {isSubmitting ? "保存中..." : submitLabel}
-      </button>
+      <div className="flex items-center justify-between">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-lg border-2 border-zinc-900 bg-zinc-900 px-6 py-2.5 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
+        >
+          {isSubmitting ? "保存中..." : submitLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="rounded-lg border-2 border-zinc-300 px-6 py-2.5 text-sm font-bold text-zinc-500 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+        >
+          キャンセル
+        </button>
+      </div>
     </form>
   );
 }

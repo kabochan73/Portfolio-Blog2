@@ -38,8 +38,7 @@ export default function EditPostPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-bold text-zinc-900">編集</h1>
+    <div className="mx-auto w-full max-w-4xl">
       <div className="mt-6">
         <PostForm
           tags={tags}

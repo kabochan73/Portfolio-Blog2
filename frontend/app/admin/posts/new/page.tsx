@@ -21,8 +21,8 @@ export default function NewPostPage() {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-xl font-bold text-zinc-900">新規作成</h1>
+    <div className="mx-auto w-full max-w-4xl">
+      <h1 className="text-4xl font-bold text-zinc-900">新規作成</h1>
       <div className="mt-6">
         <PostForm
           tags={tags}
