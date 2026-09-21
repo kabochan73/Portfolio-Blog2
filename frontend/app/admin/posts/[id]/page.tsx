@@ -34,49 +34,47 @@ export default function AdminPostDetailPage() {
   }
 
   return (
-    <div>
-      <Link href="/admin" className="text-sm text-zinc-500 hover:text-zinc-700">
-        ← 一覧に戻る
-      </Link>
-
-      <div className="mt-4 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs ${
-              post.status === "published"
-                ? "bg-green-100 text-green-700"
-                : "bg-zinc-100 text-zinc-600"
-            }`}
-          >
-            {post.status === "published" ? "公開" : "下書き"}
-          </span>
-          <h1 className="mt-2 text-xl font-bold text-zinc-900">{post.title}</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            {post.slug} ・ {formatDate(post.created_at)}
-          </p>
-        </div>
+    <div className="mx-auto w-full max-w-4xl p-4 sm:px-6 lg:px-8">
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="mt-3 text-4xl font-bold text-zinc-900">{post.title}</h1>
         <Link
           href={`/admin/posts/${post.id}/edit`}
-          className="shrink-0 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white"
+          className="mt-3 shrink-0 rounded-lg border-2 border-zinc-900 bg-zinc-900 px-4 py-2 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none"
         >
           編集
         </Link>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <time dateTime={post.created_at} className="text-xl text-zinc-800">
+          {formatDate(post.created_at)}
+        </time>
         {post.tags.map((tag) => (
           <span
             key={tag.id}
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600"
+            className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-bold text-white"
           >
             {tag.name}
           </span>
         ))}
       </div>
 
-      <div className="mt-6">
+      {post.thumbnail_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={post.thumbnail_url}
+          alt=""
+          className="mt-6 w-full rounded-xl object-cover"
+        />
+      ) : null}
+
+      <div className="mt-8">
         <MarkdownPreview>{post.body}</MarkdownPreview>
       </div>
+
+      <Link href="/admin" className="flex justify-end text-xl text-zinc-800 hover:text-zinc-600">
+        ← Back
+      </Link>
     </div>
   );
 }
