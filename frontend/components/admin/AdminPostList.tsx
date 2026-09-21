@@ -29,18 +29,9 @@ export function AdminPostList({ posts, onDelete }: AdminPostListProps) {
 
           <div className="flex min-w-0 flex-1 flex-col justify-between">
             <div>
-              <span
-                className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${
-                  post.status === "published"
-                    ? "bg-green-600 text-white"
-                    : "bg-zinc-200 text-zinc-700"
-                }`}
-              >
-                {post.status === "published" ? "公開" : "下書き"}
-              </span>
               <Link
                 href={`/admin/posts/${post.id}`}
-                className="mt-1 block truncate text-2xl font-semibold text-zinc-900 hover:underline"
+                className="block truncate text-2xl font-semibold text-zinc-900 hover:underline"
               >
                 {post.title}
               </Link>

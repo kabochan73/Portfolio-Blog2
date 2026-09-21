@@ -10,10 +10,9 @@ import { listAdminTags } from "@/lib/admin/api.tags";
 import { ApiError } from "@/lib/http";
 import type { Post, PostStatus, Tag } from "@/types";
 
-type StatusFilter = "all" | PostStatus;
+type StatusFilter = PostStatus;
 
 const TABS: { key: StatusFilter; label: string }[] = [
-  { key: "all", label: "全て" },
   { key: "published", label: "公開" },
   { key: "draft", label: "下書き" },
 ];
@@ -25,7 +24,7 @@ export default function AdminPostsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("published");
   const [tagFilter, setTagFilter] = useState<string>(ALL_TAGS_KEY);
 
   useEffect(() => {
@@ -66,7 +65,7 @@ export default function AdminPostsPage() {
 
   const filteredPosts =
     posts?.filter((post) => {
-      const matchesStatus = statusFilter === "all" || post.status === statusFilter;
+      const matchesStatus = post.status === statusFilter;
       const matchesTag =
         tagFilter === ALL_TAGS_KEY || post.tags.some((tag) => String(tag.id) === tagFilter);
 
@@ -77,7 +76,7 @@ export default function AdminPostsPage() {
     <div className="flex flex-col gap-6 sm:flex-row">
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-zinc-900">投稿一覧</h1>
+          <h1 className="text-4xl font-bold text-zinc-900">ARTICLE</h1>
           <Link
             href="/admin/posts/new"
             className="rounded-lg border-2 border-zinc-900 bg-zinc-900 px-4 py-2 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none"
