@@ -15,7 +15,7 @@ type SidebarProps = {
 export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
   return (
     <aside className="flex w-full flex-col gap-4 sm:w-72">
-      <div className="rounded-xl border border-zinc-200 bg-white p-4">
+      <div className="border-2 border-zinc-800 bg-white p-4">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 shrink-0 rounded-full bg-zinc-200" />
           <div>
@@ -25,8 +25,10 @@ export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
         <p className="mt-3 text-sm text-zinc-600">{PROFILE.bio}</p>
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-4">
-        <p className="mb-2 text-sm font-semibold text-zinc-900">TAGS</p>
+      <div className="bg-white p-4">
+        <p className="border-b-2 border-zinc-800 pb-2 text-2xl font-semibold tracking-widest text-zinc-900">
+          TAGS
+        </p>
         <ul className="flex flex-col">
           {tags.map((tag) => {
             const key = String(tag.id);
@@ -38,13 +40,16 @@ export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
                   type="button"
                   onClick={() => onSelect(key)}
                   aria-pressed={isSelected}
-                  className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                  className={`flex w-full items-center justify-between mt-2 px-2 py-2 text-sm transition-colors border-b-2 border-zinc-600 ${
                     isSelected ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-100"
                   }`}
                 >
-                  <span>{tag.name}</span>
-                  <span className={isSelected ? "text-zinc-300" : "text-zinc-400"}>
-                    {counts[tag.id] ?? 0}
+                  <span className="font-bold text-xl">{tag.name}</span>
+                  <span className="flex items-center gap-2">
+                    <span className={isSelected ? "text-white" : "text-zinc-800"}>
+                      {counts[tag.id] ?? 0}
+                    </span>
+                    <span className={isSelected ? "text-white" : "text-zinc-800"}>›</span>
                   </span>
                 </button>
               </li>

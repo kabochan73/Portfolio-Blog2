@@ -12,14 +12,12 @@ export default async function HomePage() {
   }
 
   return (
-    <div>
+    <PostBrowser posts={posts} tags={tags} counts={counts}>
       <h1 className="mt-1 text-4xl font-bold text-zinc-900">ARTICLE</h1>
-      <p className="text-xs mt-2 text-zinc-600">
+      <p className="mt-2 text-xs text-zinc-600">
         Laravel, Next.js, AWS,などの学習記録や、日々の気づきなどを投稿しています。
       </p>
-      <div className="mt-6">
-        <PostBrowser posts={posts} tags={tags} counts={counts} />
-      </div>
-    </div>
+      <div className="mt-6" />
+    </PostBrowser>
   );
 }

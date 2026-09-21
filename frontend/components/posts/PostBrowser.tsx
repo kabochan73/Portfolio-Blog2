@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { PostList } from "@/components/posts/PostList";
@@ -12,9 +13,12 @@ type PostBrowserProps = {
   posts: Post[];
   tags: Tag[];
   counts: Record<number, number>;
+  /** Rendered above the post list, in the same column — so it lines up with
+   * the top of the sidebar instead of sitting above the whole row. */
+  children?: ReactNode;
 };
 
-export function PostBrowser({ posts, tags, counts }: PostBrowserProps) {
+export function PostBrowser({ posts, tags, counts, children }: PostBrowserProps) {
   const [selectedKey, setSelectedKey] = useState<string>(ALL_POSTS_KEY);
 
   function handleSelect(key: string) {
@@ -28,9 +32,11 @@ export function PostBrowser({ posts, tags, counts }: PostBrowserProps) {
 
   return (
     <div className="flex flex-col gap-6 sm:flex-row">
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
+        {children}
         <PostList posts={visiblePosts} />
       </div>
+      <div className="hidden w-px shrink-0 bg-zinc-200 sm:block" />
       <Sidebar
         tags={tags}
         counts={counts}
