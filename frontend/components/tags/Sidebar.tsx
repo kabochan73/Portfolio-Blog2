@@ -1,9 +1,8 @@
 import type { Tag } from "@/types";
 
 const PROFILE = {
-  name: "Takumi",
-  role: "Web Engineer / Developer",
-  bio: "Laravel と Next.js を中心に学習・開発しています。技術のアウトプットや、日々の学びをこのブログにまとめています。",
+  name: "久保　拓洋",
+  bio: "Laravel と Next.js を中心に勉強しています。",
 };
 
 type SidebarProps = {
@@ -21,7 +20,6 @@ export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
           <div className="h-12 w-12 shrink-0 rounded-full bg-zinc-200" />
           <div>
             <p className="font-semibold text-zinc-900">{PROFILE.name}</p>
-            <p className="text-sm text-zinc-500">{PROFILE.role}</p>
           </div>
         </div>
         <p className="mt-3 text-sm text-zinc-600">{PROFILE.bio}</p>
