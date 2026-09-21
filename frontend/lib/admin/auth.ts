@@ -32,8 +32,15 @@ function getSnapshot(): AuthState {
 // instance, so a real snapshot here would leak one user's auth into another's
 // response. Always render "unknown" on the server; checkAuth() resolves the
 // real state after hydration.
+//
+// A single shared constant (not a fresh object per call) is required here:
+// useSyncExternalStore compares snapshots by reference, and a new object on
+// every call looks like a perpetual change, which throws "getServerSnapshot
+// should be cached" and can loop.
+const SERVER_SNAPSHOT: AuthState = { status: "unknown" };
+
 function getServerSnapshot(): AuthState {
-  return { status: "unknown" };
+  return SERVER_SNAPSHOT;
 }
 
 export function useAuthState(): AuthState {

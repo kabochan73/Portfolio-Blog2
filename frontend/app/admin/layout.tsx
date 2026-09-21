@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { AdminHeader } from "@/components/admin/AdminHeader";
 import { checkAuth, consumeSessionExpired, useAuthState } from "@/lib/admin/auth";
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
@@ -14,7 +13,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
     if (auth.status === "unknown") {
       checkAuth();
     } else if (auth.status === "guest") {
-      router.replace(consumeSessionExpired() ? "/login?expired=1" : "/login");
+      router.replace(consumeSessionExpired() ? "/login?expired=1" : "/");
     }
   }, [auth.status, router]);
 
@@ -22,10 +21,5 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
     return null;
   }
 
-  return (
-    <div>
-      <AdminHeader />
-      {children}
-    </div>
-  );
+  return <div>{children}</div>;
 }

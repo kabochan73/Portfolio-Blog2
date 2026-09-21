@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { logout } from "@/lib/admin/auth";
+import { logout, useAuthState } from "@/lib/admin/auth";
 
+/**
+ * Renders inside the site's root header (not admin/layout.tsx) so the admin
+ * nav + logout button show up on every page, but only once authenticated.
+ */
 export function AdminHeader() {
+  const auth = useAuthState();
   const router = useRouter();
 
   async function handleLogout() {
@@ -13,23 +18,27 @@ export function AdminHeader() {
     router.push("/");
   }
 
+  if (auth.status !== "authenticated") {
+    return null;
+  }
+
   return (
-    <header className="mb-6 flex items-center justify-between border-b border-zinc-200 pb-4">
-      <nav className="flex gap-4 text-sm text-zinc-600">
-        <Link href="/admin" className="hover:text-zinc-900">
-          投稿一覧
+    <div className="flex items-center gap-4 text-xl font-bold">
+      <nav className="flex gap-4 text-zinc-900">
+        <Link href="/admin" className="hover:text-zinc-400">
+          Articles
         </Link>
-        <Link href="/admin/tags" className="hover:text-zinc-900">
-          タグ管理
+        <Link href="/admin/tags" className="hover:text-zinc-400">
+          Tag
         </Link>
       </nav>
       <button
         type="button"
         onClick={handleLogout}
-        className="text-sm text-zinc-500 hover:text-zinc-900"
+        className="text-zinc-700 hover:text-zinc-400"
       >
-        ログアウト
+        Logout
       </button>
-    </header>
+    </div>
   );
 }
