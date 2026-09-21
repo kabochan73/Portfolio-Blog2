@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AdminPostList } from "@/components/admin/AdminPostList";
 import { Sidebar } from "@/components/tags/Sidebar";
+import { Button } from "@/components/ui/Button";
+import { Pill } from "@/components/ui/Pill";
 import { deletePost, listPosts } from "@/lib/admin/api.posts";
 import { listAdminTags } from "@/lib/admin/api.tags";
 import { ApiError } from "@/lib/http";
@@ -77,28 +78,18 @@ export default function AdminPostsPage() {
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold text-zinc-900">ARTICLE</h1>
-          <Link
-            href="/admin/posts/new"
-            className="rounded-lg border-2 border-zinc-900 bg-zinc-900 px-4 py-2 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none"
-          >
-            新規作成
-          </Link>
+          <Button href="/admin/posts/new">新規作成</Button>
         </div>
 
         <div className="mt-6 flex gap-2">
           {TABS.map((tab) => (
-            <button
+            <Pill
               key={tab.key}
-              type="button"
+              selected={statusFilter === tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`rounded-full border-2 px-4 py-1.5 text-sm font-bold transition-colors ${
-                statusFilter === tab.key
-                  ? "border-zinc-900 bg-zinc-900 text-white"
-                  : "border-zinc-300 text-zinc-600 hover:border-zinc-900"
-              }`}
             >
               {tab.label}
-            </button>
+            </Pill>
           ))}
         </div>
 

@@ -1,5 +1,5 @@
-import Link from "next/link";
-
+import { Card } from "@/components/ui/Card";
+import { TagBadge } from "@/components/ui/TagBadge";
 import { formatDate } from "@/lib/format";
 import type { Post } from "@/types";
 
@@ -12,10 +12,7 @@ export function PostList({ posts }: { posts: Post[] }) {
     <ul className="flex flex-col gap-4">
       {posts.map((post) => (
         <li key={post.id}>
-          <Link
-            href={`/posts/${post.slug}`}
-            className="flex gap-4 rounded-xl border-2 border-zinc-400 bg-white p-4 shadow-[4px_4px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#18181b] active:translate-x-1 active:translate-y-1 active:shadow-[0px_0px_0_0_#18181b]"
-          >
+          <Card href={`/posts/${post.slug}`} className="flex gap-4 p-4">
             <div className="h-28 w-42 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
               {post.thumbnail_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -28,21 +25,18 @@ export function PostList({ posts }: { posts: Post[] }) {
             </div>
             <div className="flex min-w-0 flex-1 flex-col justify-between">
               <div>
-                <h2 className="truncate text-2xl font-semibold text-zinc-900 pt-2">{post.title}</h2>
+                <h2 className="truncate pt-2 text-2xl font-semibold text-zinc-900">
+                  {post.title}
+                </h2>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xl text-zinc-800">
                 <time dateTime={post.created_at}>{formatDate(post.created_at)}</time>
                 {post.tags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-bold text-white"
-                  >
-                    {tag.name}
-                  </span>
+                  <TagBadge key={tag.id}>{tag.name}</TagBadge>
                 ))}
               </div>
             </div>
-          </Link>
+          </Card>
         </li>
       ))}
     </ul>

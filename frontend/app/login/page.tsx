@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Button } from "@/components/ui/Button";
+import { TextInput } from "@/components/ui/TextInput";
 import { login } from "@/lib/admin/auth";
 import { ApiError } from "@/lib/http";
 
@@ -47,12 +49,12 @@ export default function LoginPage() {
             <label htmlFor="email" className="block text-sm font-semibold text-zinc-700">
               Mail
             </label>
-            <input
+            <TextInput
               id="email"
               type="email"
               autoComplete="username"
               {...register("email")}
-              className="mt-1 w-full rounded-lg border-2 border-zinc-300 px-3 py-2 text-sm outline-none transition-colors focus:border-zinc-900"
+              className="mt-1 w-full"
             />
             {errors.email ? (
               <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -63,25 +65,21 @@ export default function LoginPage() {
             <label htmlFor="password" className="block text-sm font-semibold text-zinc-700">
               Password
             </label>
-            <input
+            <TextInput
               id="password"
               type="password"
               autoComplete="current-password"
               {...register("password")}
-              className="mt-1 w-full rounded-lg border-2 border-zinc-300 px-3 py-2 text-sm outline-none transition-colors focus:border-zinc-900"
+              className="mt-1 w-full"
             />
             {errors.password ? (
               <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
             ) : null}
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-2 rounded-lg border-2 border-zinc-900 bg-zinc-900 px-4 py-2.5 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isSubmitting} className="mt-2 w-full">
             {isSubmitting ? "Logging in..." : "Login"}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
