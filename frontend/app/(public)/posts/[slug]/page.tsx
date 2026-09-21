@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MarkdownContent } from "@/components/posts/MarkdownContent";
+import { TagBadge } from "@/components/ui/TagBadge";
 import { formatDate } from "@/lib/format";
 import { getPost } from "@/lib/public/api";
 
@@ -26,12 +27,7 @@ export default async function PostDetailPage({
           {formatDate(post.created_at)}
         </time>
         {post.tags.map((tag) => (
-          <span
-            key={tag.id}
-            className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-bold text-white"
-          >
-            {tag.name}
-          </span>
+          <TagBadge key={tag.id}>{tag.name}</TagBadge>
         ))}
       </div>
 

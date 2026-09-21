@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { MarkdownPreview } from "@/components/posts/MarkdownPreview";
+import { Button } from "@/components/ui/Button";
+import { TagBadge } from "@/components/ui/TagBadge";
 import { getAdminPost } from "@/lib/admin/api.posts";
 import { formatDate } from "@/lib/format";
 import { ApiError } from "@/lib/http";
@@ -37,12 +39,9 @@ export default function AdminPostDetailPage() {
     <div className="mx-auto w-full max-w-4xl p-4 sm:px-6 lg:px-8">
       <div className="flex items-start justify-between gap-4">
         <h1 className="mt-3 text-4xl font-bold text-zinc-900">{post.title}</h1>
-        <Link
-          href={`/admin/posts/${post.id}/edit`}
-          className="mt-3 shrink-0 rounded-lg border-2 border-zinc-900 bg-zinc-900 px-4 py-2 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none"
-        >
+        <Button href={`/admin/posts/${post.id}/edit`} className="mt-3 shrink-0">
           編集
-        </Link>
+        </Button>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -50,12 +49,7 @@ export default function AdminPostDetailPage() {
           {formatDate(post.created_at)}
         </time>
         {post.tags.map((tag) => (
-          <span
-            key={tag.id}
-            className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-bold text-white"
-          >
-            {tag.name}
-          </span>
+          <TagBadge key={tag.id}>{tag.name}</TagBadge>
         ))}
       </div>
 

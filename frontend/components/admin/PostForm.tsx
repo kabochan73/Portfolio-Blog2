@@ -7,6 +7,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { MarkdownPreview } from "@/components/posts/MarkdownPreview";
+import { Button } from "@/components/ui/Button";
+import { Pill } from "@/components/ui/Pill";
+import { TextInput } from "@/components/ui/TextInput";
 import type { PostInput } from "@/lib/admin/api.posts";
 import { ApiError } from "@/lib/http";
 import type { Post, Tag } from "@/types";
@@ -30,16 +33,6 @@ type PostFormProps = {
   submitLabel: string;
   onSubmit: (input: PostInput) => Promise<void>;
 };
-
-const inputClass =
-  "mt-1 w-full rounded-lg border-2 border-zinc-300 px-3 py-2 text-sm outline-none transition-colors focus:border-zinc-900";
-
-const pillButtonClass = (selected: boolean) =>
-  `rounded-full border-2 px-3 py-1 text-sm font-bold transition-colors ${
-    selected
-      ? "border-zinc-900 bg-zinc-900 text-white"
-      : "border-zinc-300 text-zinc-600 hover:border-zinc-900"
-  }`;
 
 export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormProps) {
   const router = useRouter();
@@ -103,7 +96,7 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
         <label htmlFor="title" className="block text-sm font-bold text-zinc-700">
           タイトル
         </label>
-        <input id="title" {...register("title")} className={inputClass} />
+        <TextInput id="title" {...register("title")} className="mt-1 w-full" />
         {errors.title ? <p className="mt-1 text-sm text-red-600">{errors.title.message}</p> : null}
       </div>
 
@@ -111,7 +104,7 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
         <label htmlFor="slug" className="block text-sm font-bold text-zinc-700">
           スラッグ
         </label>
-        <input id="slug" {...register("slug")} className={inputClass} />
+        <TextInput id="slug" {...register("slug")} className="mt-1 w-full" />
         {errors.slug ? <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p> : null}
       </div>
 
@@ -119,15 +112,13 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
         <span className="block text-sm font-bold text-zinc-700">タグ</span>
         <div className="mt-2 flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <button
+            <Pill
               key={tag.id}
-              type="button"
+              selected={selectedTagIds.includes(tag.id)}
               onClick={() => toggleTag(tag.id)}
-              aria-pressed={selectedTagIds.includes(tag.id)}
-              className={pillButtonClass(selectedTagIds.includes(tag.id))}
             >
               {tag.name}
-            </button>
+            </Pill>
           ))}
         </div>
       </div>
@@ -136,15 +127,9 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
         <span className="block text-sm font-bold text-zinc-700">ステータス</span>
         <div className="mt-2 flex gap-2">
           {(["draft", "published"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setValue("status", value)}
-              aria-pressed={status === value}
-              className={pillButtonClass(status === value)}
-            >
+            <Pill key={value} selected={status === value} onClick={() => setValue("status", value)}>
               {value === "draft" ? "下書き" : "公開"}
-            </button>
+            </Pill>
           ))}
         </div>
       </div>
@@ -193,20 +178,12 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
       {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
 
       <div className="flex items-center justify-between">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-lg border-2 border-zinc-900 bg-zinc-900 px-6 py-2.5 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "保存中..." : submitLabel}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-lg border-2 border-zinc-300 px-6 py-2.5 text-sm font-bold text-zinc-500 transition-colors hover:border-zinc-900 hover:text-zinc-900"
-        >
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => router.back()}>
           キャンセル
-        </button>
+        </Button>
       </div>
     </form>
   );

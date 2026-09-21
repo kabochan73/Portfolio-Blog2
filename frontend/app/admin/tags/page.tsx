@@ -3,6 +3,9 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { TextInput } from "@/components/ui/TextInput";
 import { createTag, deleteTag, listAdminTags, updateTag } from "@/lib/admin/api.tags";
 import { ApiError } from "@/lib/http";
 import type { Tag } from "@/types";
@@ -80,18 +83,12 @@ export default function AdminTagsPage() {
       <h1 className="text-4xl font-bold text-zinc-900">TAG</h1>
 
       <form onSubmit={handleCreate} className="mt-6 flex gap-2">
-        <input
+        <TextInput
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="新しいタグ名"
-          className="rounded-lg border-2 border-zinc-300 px-3 py-2 text-sm outline-none transition-colors focus:border-zinc-900"
         />
-        <button
-          type="submit"
-          className="rounded-lg border-2 border-zinc-900 bg-zinc-900 px-4 py-2 text-sm font-bold text-white shadow-[3px_3px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#18181b] active:translate-x-0.75 active:translate-y-0.75 active:shadow-none"
-        >
-          追加
-        </button>
+        <Button type="submit">追加</Button>
       </form>
       {createError ? <p className="mt-2 text-sm text-red-600">{createError}</p> : null}
 
@@ -100,53 +97,36 @@ export default function AdminTagsPage() {
 
       <ul className="mt-6 flex flex-col gap-3">
         {tags?.map((tag) => (
-          <li
-            key={tag.id}
-            className="flex items-center justify-between rounded-xl border-2 border-zinc-400 bg-white px-4 py-3 shadow-[4px_4px_0_0_#18181b] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#18181b]"
-          >
-            {editingId === tag.id ? (
-              <div className="flex flex-1 items-center gap-2">
-                <input
-                  value={editingName}
-                  onChange={(e) => setEditingName(e.target.value)}
-                  className="flex-1 rounded-lg border-2 border-zinc-300 px-2 py-1 text-sm outline-none transition-colors focus:border-zinc-900"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleUpdate(tag.id)}
-                  className="rounded-lg border-2 border-zinc-900 px-3 py-1 text-sm font-bold text-zinc-900 transition-colors hover:bg-zinc-900 hover:text-white"
-                >
-                  保存
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingId(null)}
-                  className="rounded-lg border-2 border-zinc-300 px-3 py-1 text-sm font-bold text-zinc-500 transition-colors hover:border-zinc-900 hover:text-zinc-900"
-                >
-                  キャンセル
-                </button>
-              </div>
-            ) : (
-              <>
-                <span className="text-xl font-semibold text-zinc-900">{tag.name}</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => startEdit(tag)}
-                    className="rounded-lg border-2 border-zinc-900 px-3 py-1 text-sm font-bold text-zinc-900 transition-colors hover:bg-zinc-900 hover:text-white"
-                  >
-                    編集
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(tag.id)}
-                    className="rounded-lg border-2 border-red-600 px-3 py-1 text-sm font-bold text-red-600 transition-colors hover:bg-red-600 hover:text-white"
-                  >
-                    削除
-                  </button>
+          <li key={tag.id}>
+            <Card className="flex items-center justify-between px-4 py-3">
+              {editingId === tag.id ? (
+                <div className="flex flex-1 items-center gap-2">
+                  <TextInput
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => handleUpdate(tag.id)}>
+                    保存
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
+                    キャンセル
+                  </Button>
                 </div>
-              </>
-            )}
+              ) : (
+                <>
+                  <span className="text-xl font-semibold text-zinc-900">{tag.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => startEdit(tag)}>
+                      編集
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(tag.id)}>
+                      削除
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Card>
           </li>
         ))}
       </ul>
