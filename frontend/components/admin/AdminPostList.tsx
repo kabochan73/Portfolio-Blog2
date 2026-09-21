@@ -38,7 +38,7 @@ export function AdminPostList({ posts, onDelete }: AdminPostListProps) {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-600">
+              <div className="flex flex-wrap items-center gap-2 text-xl text-zinc-800">
                 <time dateTime={post.created_at}>{formatDate(post.created_at)}</time>
                 {post.tags.map((tag) => (
                   <span

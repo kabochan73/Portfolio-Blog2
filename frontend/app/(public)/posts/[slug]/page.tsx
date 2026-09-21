@@ -22,7 +22,7 @@ export default async function PostDetailPage({
 
       <h1 className="mt-3 text-4xl font-bold text-zinc-900">{post.title}</h1>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <time dateTime={post.created_at} className="text-sm text-zinc-500">
+        <time dateTime={post.created_at} className="text-xl text-zinc-800">
           {formatDate(post.created_at)}
         </time>
         {post.tags.map((tag) => (
