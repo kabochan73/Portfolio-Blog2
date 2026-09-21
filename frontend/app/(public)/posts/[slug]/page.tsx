@@ -18,14 +18,13 @@ export default async function PostDetailPage({
   }
 
   return (
-    <div className="w-full max-w-4xl self-center px-4 py-8 sm:px-6 lg:px-8">
+    <div className="w-full max-w-4xl self-center p-4 sm:px-6 lg:px-8">
 
-
-      <h1 className="mt-3 text-3xl font-bold text-zinc-900">{post.title}</h1>
-      <time dateTime={post.created_at} className="mt-2 block text-sm text-zinc-500">
-        {formatDate(post.created_at)}
-      </time>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <h1 className="mt-3 text-4xl font-bold text-zinc-900">{post.title}</h1>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <time dateTime={post.created_at} className="text-sm text-zinc-500">
+          {formatDate(post.created_at)}
+        </time>
         {post.tags.map((tag) => (
           <span
             key={tag.id}
@@ -49,8 +48,8 @@ export default async function PostDetailPage({
         <MarkdownContent>{post.body}</MarkdownContent>
       </div>
 
-      <Link href="/" className="flex justify-end text-lg  text-zinc-500 hover:text-zinc-700">
-        ← 一覧に戻る
+      <Link href="/" className="flex justify-end text-xl  text-zinc-800 hover:text-zinc-600">
+        ← Back
       </Link>
     </div>
   );
