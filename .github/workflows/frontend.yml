@@ -46,3 +46,25 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # railway up must run from the repo root: the frontend service's
+    # rootDirectory is configured server-side as /frontend, and re-scoping
+    # the upload to frontend/ here would upload frontend/frontend/ instead.
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service frontend --ci -m "Deploy ${{ github.sha }}"

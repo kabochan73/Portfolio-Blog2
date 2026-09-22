@@ -49,3 +49,25 @@ jobs:
 
       - name: Run tests (Pest)
         run: vendor/bin/pest
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # railway up must run from the repo root: the backend service's
+    # rootDirectory is configured server-side as /backend, and re-scoping
+    # the upload to backend/ here would upload backend/backend/ instead.
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service backend --ci -m "Deploy ${{ github.sha }}"
