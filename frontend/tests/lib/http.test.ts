@@ -16,6 +16,10 @@ describe("lib/http", () => {
 
   beforeEach(() => {
     jest.resetModules();
+    // lib/http.ts reads this at module-load time; pin it so the test is
+    // deterministic regardless of what the surrounding environment (e.g. a
+    // docker-compose container) happens to set it to.
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:8000/api";
     fetchMock.mockReset();
     global.fetch = fetchMock as unknown as typeof fetch;
     clearCookies();

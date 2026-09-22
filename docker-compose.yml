@@ -43,7 +43,10 @@ services:
       - /app/node_modules
       - /app/.next
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+      # Relative so the browser calls this app's own origin; next.config.ts
+      # proxies /api and /sanctum through to API_URL below. See the comment
+      # there for why (cross-host cookies can't be read via document.cookie).
+      NEXT_PUBLIC_API_URL: /api
       API_URL: http://backend:8000/api
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_SESSION_COOKIE_NAME: blog_session
