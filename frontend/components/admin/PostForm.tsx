@@ -94,7 +94,7 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
     <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-6">
       <div>
         <label htmlFor="title" className="block text-sm font-bold text-zinc-700">
-          タイトル
+          Title
         </label>
         <TextInput id="title" {...register("title")} className="mt-1 w-full" />
         {errors.title ? <p className="mt-1 text-sm text-red-600">{errors.title.message}</p> : null}
@@ -102,14 +102,14 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
 
       <div>
         <label htmlFor="slug" className="block text-sm font-bold text-zinc-700">
-          スラッグ
+         Slug
         </label>
         <TextInput id="slug" {...register("slug")} className="mt-1 w-full" />
         {errors.slug ? <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p> : null}
       </div>
 
       <div>
-        <span className="block text-sm font-bold text-zinc-700">タグ</span>
+        <span className="block text-sm font-bold text-zinc-700">Tags</span>
         <div className="mt-2 flex flex-wrap gap-2">
           {tags.map((tag) => (
             <Pill
@@ -124,11 +124,11 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
       </div>
 
       <div>
-        <span className="block text-sm font-bold text-zinc-700">ステータス</span>
+        <span className="block text-sm font-bold text-zinc-700">Status</span>
         <div className="mt-2 flex gap-2">
           {(["draft", "published"] as const).map((value) => (
             <Pill key={value} selected={status === value} onClick={() => setValue("status", value)}>
-              {value === "draft" ? "下書き" : "公開"}
+              {value === "draft" ? "Draft" : "Published"}
             </Pill>
           ))}
         </div>
@@ -145,7 +145,7 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
                 : "text-zinc-400 hover:text-zinc-700"
             }`}
           >
-            編集
+            Edit
           </button>
           <button
             type="button"
@@ -156,7 +156,7 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
                 : "text-zinc-400 hover:text-zinc-700"
             }`}
           >
-            プレビュー
+            Preview
           </button>
         </div>
 
