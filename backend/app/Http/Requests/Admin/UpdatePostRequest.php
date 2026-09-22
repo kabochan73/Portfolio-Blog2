@@ -28,6 +28,7 @@ class UpdatePostRequest extends FormRequest
             'title' => ['sometimes', 'required', 'string', 'max:30'],
             'slug' => ['sometimes', 'required', 'string', 'max:30', 'alpha_dash', Rule::unique('posts', 'slug')->ignore($this->route('post'))],
             'body' => ['sometimes', 'required', 'string'],
+            'thumbnail_path' => ['sometimes', 'nullable', 'string'],
             'status' => ['sometimes', 'required', Rule::enum(PostStatus::class)],
             'tag_ids' => ['sometimes', 'nullable', 'array'],
             'tag_ids.*' => [Rule::exists('tags', 'id')],

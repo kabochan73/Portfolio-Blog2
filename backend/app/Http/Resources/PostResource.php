@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class PostResource extends JsonResource
 {
@@ -19,7 +20,9 @@ class PostResource extends JsonResource
             'title' => $this->title,
             'slug' => $this->slug,
             'body' => $this->body,
-            'thumbnail_url' => $this->thumbnail_url,
+            'thumbnail_url' => $this->thumbnail_path
+                ? Storage::disk('s3')->temporaryUrl($this->thumbnail_path, now()->addDays(7))
+                : null,
             'status' => $this->status,
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'created_at' => $this->created_at,

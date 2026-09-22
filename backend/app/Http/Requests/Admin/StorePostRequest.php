@@ -28,6 +28,7 @@ class StorePostRequest extends FormRequest
             'title' => ['required', 'string', 'max:30'],
             'slug' => ['required', 'string', 'max:30', 'alpha_dash', Rule::unique('posts', 'slug')],
             'body' => ['required', 'string'],
+            'thumbnail_path' => ['nullable', 'string'],
             'status' => ['required', Rule::enum(PostStatus::class)],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => [Rule::exists('tags', 'id')],

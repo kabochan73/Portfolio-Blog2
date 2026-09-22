@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\TagController as AdminTagController;
+use App\Http\Controllers\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\TagController;
@@ -22,4 +23,5 @@ Route::get('/tags', [TagController::class, 'index']);
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::apiResource('posts', AdminPostController::class);
     Route::apiResource('tags', AdminTagController::class);
+    Route::post('uploads/thumbnail', [AdminUploadController::class, 'store']);
 });
