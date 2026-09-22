@@ -1,0 +1,24 @@
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-progress --no-scripts --optimize-autoloader
+
+FROM php:8.4-cli
+RUN apt-get update && apt-get install -y \
+    libpq-dev unzip git \
+    && docker-php-ext-install pdo_pgsql \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www/html
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
+
+# The repo's committed bootstrap/cache/packages.php was generated against a
+# dev install (includes laravel/boost) and gets loaded before it can be
+# regenerated, so delete it first, then rebuild against the --no-dev vendor
+# set actually shipped in this image.
+RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
+    && php artisan package:discover --no-interaction
+
+EXPOSE 8000
+CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
