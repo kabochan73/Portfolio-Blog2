@@ -21,13 +21,12 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/var/www/html
+    # DB_* intentionally not set here (backend/.env already has them):
+    # setting them as real container env vars puts them in $_SERVER, which
+    # phpunit.xml's <env force="true"> cannot override (it only touches
+    # getenv()/$_ENV) — RefreshDatabase would then run against this
+    # container's real Postgres instead of the test sqlite connection.
     environment:
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: blog
-      DB_USERNAME: blog
-      DB_PASSWORD: secret
       FRONTEND_URL: http://localhost:3000
       SANCTUM_STATEFUL_DOMAINS: localhost:3000
       SESSION_COOKIE: blog_session
