@@ -48,3 +48,22 @@ test('email and password are required', function () {
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['email', 'password']);
 });
+
+test('repeated failed logins for the same email are throttled', function () {
+    $user = User::factory()->create(['password' => 'correct-password']);
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->withHeaders(fromFrontend())->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ])->assertUnprocessable();
+    }
+
+    $response = $this->withHeaders(fromFrontend())->postJson('/api/login', [
+        'email' => $user->email,
+        'password' => 'correct-password',
+    ]);
+
+    $response->assertStatus(429);
+    $this->assertGuest();
+});
