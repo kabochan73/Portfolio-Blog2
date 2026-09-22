@@ -19,6 +19,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // API専用アプリのため、未認証時にLaravelのデフォルトの'login'名前付きルートへ
         // リダイレクトさせず常に401 JSONを返す
         $middleware->redirectGuestsTo(fn () => null);
+
+        // Railwayなどのプラットフォーム上では、リクエストは常にプラットフォームの
+        // 内部プロキシ経由で届く（生のクライアントと直接繋がることはない）ため、
+        // 全プロキシを信頼してX-Forwarded-*から実クライアントIPを取得する。
+        // 未設定だとRequest::ip()がプロキシ側のIPを返し、IPベースのレート制限等が
+        // 正しく機能しない。
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
