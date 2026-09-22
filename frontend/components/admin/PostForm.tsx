@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { TextInput } from "@/components/ui/TextInput";
 import type { PostInput } from "@/lib/admin/api.posts";
+import { uploadThumbnail } from "@/lib/admin/api.uploads";
 import { ApiError } from "@/lib/http";
 import type { Post, Tag } from "@/types";
 
@@ -42,6 +44,16 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // undefined = untouched this session (omit from the payload, keep the
+  // existing thumbnail); null = explicitly removed; string = freshly
+  // uploaded path.
+  const [thumbnailPath, setThumbnailPath] = useState<string | null | undefined>(undefined);
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(
+    initialPost?.thumbnail_url ?? null,
+  );
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -68,10 +80,39 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
     );
   }
 
+  async function handleThumbnailChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    setThumbnailError(null);
+    setThumbnailUploading(true);
+    try {
+      const result = await uploadThumbnail(file);
+      setThumbnailPath(result.thumbnail_path);
+      setThumbnailPreviewUrl(result.thumbnail_url);
+    } catch (err) {
+      setThumbnailError(err instanceof ApiError ? err.message : "アップロードに失敗しました");
+    } finally {
+      setThumbnailUploading(false);
+    }
+  }
+
+  function removeThumbnail() {
+    setThumbnailPath(null);
+    setThumbnailPreviewUrl(null);
+  }
+
   async function submit(values: FormValues) {
     setSubmitError(null);
     try {
-      await onSubmit({ ...values, tag_ids: selectedTagIds });
+      await onSubmit({
+        ...values,
+        tag_ids: selectedTagIds,
+        ...(thumbnailPath !== undefined ? { thumbnail_path: thumbnailPath } : {}),
+      });
     } catch (e) {
       if (e instanceof ApiError && e.errors) {
         let hasFieldError = false;
@@ -106,6 +147,40 @@ export function PostForm({ tags, initialPost, submitLabel, onSubmit }: PostFormP
         </label>
         <TextInput id="slug" {...register("slug")} className="mt-1 w-full" />
         {errors.slug ? <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p> : null}
+      </div>
+
+      <div>
+        <span className="block text-sm font-bold text-zinc-700">Thumbnail</span>
+        <div className="mt-2 flex items-center gap-4">
+          {thumbnailPreviewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={thumbnailPreviewUrl}
+              alt=""
+              className="h-24 w-36 shrink-0 rounded-lg border-2 border-zinc-300 object-cover"
+            />
+          ) : (
+            <div className="flex h-24 w-36 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 text-xs text-zinc-400">
+              No image
+            </div>
+          )}
+          <div className="flex flex-col items-start gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailChange}
+              disabled={thumbnailUploading}
+              className="text-sm"
+            />
+            {thumbnailUploading ? <p className="text-xs text-zinc-500">アップロード中...</p> : null}
+            {thumbnailPreviewUrl ? (
+              <Button type="button" variant="ghost" size="sm" onClick={removeThumbnail}>
+                削除
+              </Button>
+            ) : null}
+          </div>
+        </div>
+        {thumbnailError ? <p className="mt-1 text-sm text-red-600">{thumbnailError}</p> : null}
       </div>
 
       <div>

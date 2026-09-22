@@ -8,6 +8,7 @@ export type PostInput = {
   body: string;
   status: PostStatus;
   tag_ids?: number[];
+  thumbnail_path?: string | null;
 };
 
 export async function listPosts(): Promise<Post[]> {
