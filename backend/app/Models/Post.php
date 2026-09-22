@@ -19,7 +19,7 @@ class Post extends Model
         'title',
         'slug',
         'body',
-        'thumbnail_url',
+        'thumbnail_path',
         'status',
     ];
 

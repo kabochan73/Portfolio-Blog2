@@ -27,7 +27,7 @@ class PostFactory extends Factory
             'title' => $title,
             'slug' => Str::slug($title),
             'body' => fake()->paragraphs(3, true),
-            'thumbnail_url' => null,
+            'thumbnail_path' => null,
             'status' => PostStatus::Draft,
         ];
     }
