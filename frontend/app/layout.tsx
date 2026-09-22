@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TAKUMI BLOG",
+  title: "PORTFOLIO BLOG",
   description: "Web Engineer / Developer",
 };
 
