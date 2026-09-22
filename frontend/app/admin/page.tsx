@@ -39,14 +39,14 @@ export default function AdminPostsPage() {
       });
   }, []);
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: number, slug: string) {
     if (!confirm("この記事を削除しますか？")) {
       return;
     }
 
     setDeleteError(null);
     try {
-      await deletePost(id);
+      await deletePost(id, slug);
       setPosts((prev) => prev?.filter((post) => post.id !== id) ?? null);
     } catch (e) {
       setDeleteError(e instanceof ApiError ? e.message : "削除に失敗しました");

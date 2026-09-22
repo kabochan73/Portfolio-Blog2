@@ -8,7 +8,7 @@ import type { Post } from "@/types";
 
 type AdminPostListProps = {
   posts: Post[];
-  onDelete: (id: number) => void;
+  onDelete: (id: number, slug: string) => void;
 };
 
 export function AdminPostList({ posts, onDelete }: AdminPostListProps) {
@@ -49,7 +49,7 @@ export function AdminPostList({ posts, onDelete }: AdminPostListProps) {
                   <Button href={`/admin/posts/${post.id}/edit`} variant="outline" size="sm">
                     編集
                   </Button>
-                  <Button variant="danger" size="sm" onClick={() => onDelete(post.id)}>
+                  <Button variant="danger" size="sm" onClick={() => onDelete(post.id, post.slug)}>
                     削除
                   </Button>
                 </div>

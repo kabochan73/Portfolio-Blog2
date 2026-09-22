@@ -1,4 +1,5 @@
 import { adminFetchJson } from "@/lib/admin/auth";
+import { revalidateTags } from "@/lib/admin/revalidate";
 import type { ApiResponse, Tag } from "@/types";
 
 export type TagInput = {
@@ -17,6 +18,8 @@ export async function createTag(input: TagInput): Promise<Tag> {
     body: JSON.stringify(input),
   });
 
+  await revalidateTags(["tags", "posts"]);
+
   return data;
 }
 
@@ -26,9 +29,13 @@ export async function updateTag(id: number, input: TagInput): Promise<Tag> {
     body: JSON.stringify(input),
   });
 
+  await revalidateTags(["tags", "posts"]);
+
   return data;
 }
 
 export async function deleteTag(id: number): Promise<void> {
   await adminFetchJson<void>(`/admin/tags/${id}`, { method: "DELETE" });
+
+  await revalidateTags(["tags", "posts"]);
 }
