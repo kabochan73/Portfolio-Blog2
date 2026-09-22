@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import type { Tag } from "@/types";
 
 const PROFILE = {
@@ -17,7 +19,13 @@ export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
     <aside className="flex w-full flex-col gap-4 sm:w-72">
       <div className="border-2 border-zinc-800 bg-white p-4">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 shrink-0 rounded-full bg-zinc-200" />
+          <Image
+            src="/profile.jpeg"
+            alt=""
+            width={48}
+            height={48}
+            className="h-12 w-12 shrink-0 rounded-full object-cover"
+          />
           <div>
             <p className="font-semibold text-zinc-900">{PROFILE.name}</p>
           </div>
