@@ -16,7 +16,7 @@ type SidebarProps = {
 
 export function Sidebar({ tags, counts, selectedKey, onSelect }: SidebarProps) {
   return (
-    <aside className="flex w-full flex-col gap-4 sm:w-72">
+    <aside className="flex w-full flex-col gap-4 self-start sm:sticky sm:top-6 sm:w-72">
       <div className="border-2 border-zinc-800 bg-white p-4">
         <div className="flex items-center gap-3">
           <Image
