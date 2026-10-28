@@ -13,7 +13,7 @@ class PostController extends Controller
     {
         $posts = Post::where('status', PostStatus::Published)
             ->with('tags')
-            ->latest('created_at')
+            ->oldest('created_at')
             ->get();
 
         return PostResource::collection($posts);

@@ -31,7 +31,7 @@ class PostController extends Controller implements HasMiddleware
      */
     public function index(): AnonymousResourceCollection
     {
-        $posts = Post::with('tags')->latest()->get();
+        $posts = Post::with('tags')->oldest()->get();
 
         return PostResource::collection($posts);
     }
