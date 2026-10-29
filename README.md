@@ -1,37 +1,63 @@
 # Portfolio Blog
 
-Laravel（API） + Next.js（App Router）構成のシンプルなブログアプリです。
-ポートフォリオとして、設計・実装からテスト・本番デプロイまで一通り自分で行いました。
+Laravel + Next.js　構成のシンプルなブログアプリです。
 
 ## デモ
 
 - 公開ページ: https://frontend-production-2c45.up.railway.app
-- 管理画面: https://frontend-production-2c45.up.railway.app/login（ログイン情報は面接時にお伝えします）
 
-## スクリーンショット
+## ER図
 
-| 記事一覧 | 記事詳細 |
-|---|---|
-| ![記事一覧](doc/images/public-home.png) | ![記事詳細](doc/images/public-detail.png) |
+```mermaid
+erDiagram
+    USERS ||--o{ POSTS : "投稿する"
+    POSTS ||--o{ POST_TAG : ""
+    TAGS ||--o{ POST_TAG : ""
+
+    USERS {
+        bigint id PK
+        string name
+        string email UK
+        string password
+    }
+    POSTS {
+        bigint id PK
+        bigint user_id FK
+        string title
+        string slug UK
+        text body
+        string thumbnail_path "nullable"
+        string status "draft/published"
+        timestamp created_at
+    }
+    TAGS {
+        bigint id PK
+        string name UK
+    }
+    POST_TAG {
+        bigint post_id PK_FK
+        bigint tag_id PK_FK
+    }
+```
 
 ## 主な機能
 
 - 記事（Markdown）・タグの管理（作成・編集・削除、タグによる絞り込み）
 - サムネイル画像のアップロード
 - 管理者ログイン（Sanctum SPA Cookie認証、ログイン試行のレート制限つき）
-- 公開ページはSSR+ISR、管理操作後は即時キャッシュ再検証
+- 公開ページは一覧がISR、管理操作後は即時キャッシュ再検証
 - 投稿の所有者のみが編集・削除できる認可（Policy）
 
 意図的にスコープ外にしたもの: コメント、いいね、ページネーション、検索、新規登録・パスワードリセット
 
 ## 技術スタック
 
-| 層 | 技術 |
-|---|---|
-| バックエンド | Laravel 13 / PHP 8.3+ / Laravel Sanctum（SPA Cookie認証）/ PostgreSQL / Pest / Laravel Pint |
+| 層             | 技術                                                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| バックエンド   | Laravel 13 / PHP 8.3+ / Laravel Sanctum（SPA Cookie認証）/ PostgreSQL / Pest / Laravel Pint                                      |
 | フロントエンド | Next.js 16（App Router）/ React 19 / TypeScript / Tailwind CSS / react-hook-form + zod / react-markdown / Jest + Testing Library |
-| ストレージ | Railway Buckets（S3互換オブジェクトストレージ、署名付きURLで配信） |
-| インフラ | Railway（Dockerfileビルド、GitHub連携による自動デプロイ）/ Docker Compose（ローカル）/ GitHub Actions（CI） |
+| ストレージ     | Railway Buckets（S3互換オブジェクトストレージ、署名付きURLで配信）                                                               |
+| インフラ       | Railway（Dockerfileビルド、GitHub連携による自動デプロイ）/ Docker Compose（ローカル）/ GitHub Actions（CI）                      |
 
 ## アーキテクチャ
 
@@ -42,7 +68,7 @@ docker-compose.yml  ローカル開発用
 ```
 
 - バックエンドとフロントエンドは完全に分離した別プロセス。本番はRailwayにそれぞれ個別デプロイ。
-- 公開ページ（`/`, `/posts/[slug]`）はServer Component + オンデマンドISR（`revalidate: 7200`、管理操作後は`/api/revalidate`で即時再検証）。
+- 公開ページはServer Component。一覧（`/`）は静的生成+ISR（`revalidate: 7200`）、詳細（`/posts/[slug]`）は`generateStaticParams`を使っていないためリクエストごとにサーバーでレンダリングするSSR（ただし中の`fetch`自体は同じく`revalidate: 7200`でキャッシュされる）。どちらも管理操作後は`/api/revalidate`で即時再検証。
 - 管理画面（`/admin/**`）はCookie認証状態に依存する動的データのため完全にCSR。
 - **本番のbackend/frontendは別ホスト名（`*.up.railway.app`）で動いており、独自ドメインも無いため、CookieをフロントエンドのJSから読む手段がない**（`document.cookie`は同一ホスト名のCookieしか見えない）という制約があった。これをNext.jsの`rewrites()`で`/api`・`/sanctum`をバックエンドへ透過プロキシし、ブラウザからは常に同一オリジンに見える構成にすることで解決している（詳細は`frontend/next.config.ts`）。
 
