@@ -8,37 +8,7 @@ Laravel + Next.js　構成のシンプルなブログアプリです。
 
 ## ER図
 
-```mermaid
-erDiagram
-    USERS ||--o{ POSTS : "投稿する"
-    POSTS ||--o{ POST_TAG : ""
-    TAGS ||--o{ POST_TAG : ""
-
-    USERS {
-        bigint id PK
-        string name
-        string email UK
-        string password
-    }
-    POSTS {
-        bigint id PK
-        bigint user_id FK
-        string title
-        string slug UK
-        text body
-        string thumbnail_path "nullable"
-        string status "draft/published"
-        timestamp created_at
-    }
-    TAGS {
-        bigint id PK
-        string name UK
-    }
-    POST_TAG {
-        bigint post_id PK_FK
-        bigint tag_id PK_FK
-    }
-```
+![ER図](doc/images/er-diagram.png)
 
 ## 主な機能
 
