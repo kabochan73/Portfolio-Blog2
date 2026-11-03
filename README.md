@@ -38,7 +38,7 @@ docker-compose.yml  ローカル開発用
 ```
 
 - バックエンドとフロントエンドは完全に分離した別プロセス。本番はRailwayにそれぞれ個別デプロイ。
-- 公開ページはServer Component。一覧（`/`）は静的生成+ISR（`revalidate: 7200`）、詳細（`/posts/[slug]`）は`generateStaticParams`を使っていないためリクエストごとにサーバーでレンダリングするSSR（ただし中の`fetch`自体は同じく`revalidate: 7200`でキャッシュされる）。どちらも管理操作後は`/api/revalidate`で即時再検証。
+- 公開ページはServer Component。一覧（`/`）・詳細（`/posts/[slug]`）とも`generateStaticParams`でビルド時に静的生成+ISR（`revalidate: 7200`）。詳細側は未知のslug（ビルド後に作成された記事）も`dynamicParams`のフォールバックで初回アクセス時に生成・キャッシュされる。どちらも管理操作後は`/api/revalidate`で即時再検証。
 - 管理画面（`/admin/**`）はCookie認証状態に依存する動的データのため完全にCSR。
 - **本番のbackend/frontendは別ホスト名（`*.up.railway.app`）で動いており、独自ドメインも無いため、CookieをフロントエンドのJSから読む手段がない**（`document.cookie`は同一ホスト名のCookieしか見えない）という制約があった。これをNext.jsの`rewrites()`で`/api`・`/sanctum`をバックエンドへ透過プロキシし、ブラウザからは常に同一オリジンに見える構成にすることで解決している（詳細は`frontend/next.config.ts`）。
 

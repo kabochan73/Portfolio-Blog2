@@ -82,11 +82,12 @@ frontend/
   - `/`: タグ`["posts", "tags"]`
   - `/posts/[slug]`: タグ`["posts", "post:${slug}"]`
 
-  ただし**ページ単位のレンダリング方式はfetchの設定だけで決まらない**。`/`は静的ルートなので
+  **ページ単位のレンダリング方式はfetchの設定だけで決まらない**点に注意。`/`は静的ルートなので
   ビルド/初回アクセス時に静的生成されるISR（`npm run build`の出力で`○`=Static）。`/posts/[slug]`は
-  `generateStaticParams`を使っていないため、リクエストごとにNext.jsサーバーがその場でHTMLを生成する
-  SSR（同出力で`ƒ`=Dynamic）。中の`fetch`自体はどちらも同じく2時間キャッシュされるので、
-  「詳細ページはHTML生成だけ毎回サーバーでやるが、データ取得自体は一覧と同じくキャッシュされる」という状態。
+  `generateStaticParams`でビルド時に既存の全slugを静的生成（同出力で`●`=SSG）。`dynamicParams`は
+  デフォルト`true`のため、ビルド後に作られた新しい記事（事前生成リストに無いslug）も初回アクセス時に
+  レンダリング＋キャッシュされる（フォールバック動作、ビルドは壊れない）。中の`fetch`自体はどちらも
+  同じく2時間キャッシュされる。
   - 管理画面での作成・更新・削除後、`/api/revalidate`を呼んで該当タグを即時`revalidateTag`（時間ベース2時間を保険として併用）
   - タグ絞り込みなどインタラクティブな部分だけを薄いClient Componentに切り出し、Server Component側で
     事前にレンダリング済みのリストをpropsとして渡す（Client Component側でデータフェッチはしない）

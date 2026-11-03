@@ -15,5 +15,5 @@ Markdownで記事を書き、公開側は認証不要の読み取り専用、管
 Railway Bucketへの画像アップロードなど「実装として一段しっかりさせる」方向の拡張を行っている。
 
 - バックエンド: Laravel + Sanctum(SPA Cookie認証) + PostgreSQL + Policy、Railway + Docker
-- フロントエンド: Next.js (App Router) + TypeScript + Tailwind CSS、公開ページはSC（一覧はISR/詳細はSSR）、管理画面はCSR、Railway + Docker
+- フロントエンド: Next.js (App Router) + TypeScript + Tailwind CSS、公開ページはSC（一覧・詳細ともSSG+ISR）、管理画面はCSR、Railway + Docker
 - 2026-09 設計フェーズとして書き起こし、2026-11 時点の実装（デプロイ・CI/CD・画像アップロード・同一オリジン化プロキシなど）に合わせて加筆・修正済み

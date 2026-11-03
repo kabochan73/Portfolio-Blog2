@@ -50,11 +50,12 @@ Blog-Portfolio2/
 
 ## レンダリング方針
 
-- **公開ページ**はどちらもServer Componentだが、ページ単位のレンダリング方式は異なる
-  （`npm run build`の出力で確認可能）:
-  - `/`（一覧）: `generateStaticParams`不要な静的ルートのため静的生成+ISR（`○`=Static）
-  - `/posts/[slug]`（詳細）: `generateStaticParams`を使っていないためリクエストごとにサーバーでレンダリング
-    するSSR（`ƒ`=Dynamic）。ただし中の`fetch`自体は一覧側と同じく`next:{revalidate:7200, tags:[...]}`でキャッシュされる
+- **公開ページ**はどちらもServer Componentで、どちらも静的生成+ISR（`npm run build`の出力で確認可能）:
+  - `/`（一覧）: 静的ルートのため最初から静的生成+ISR（`○`=Static）
+  - `/posts/[slug]`（詳細）: `generateStaticParams`でビルド時に既存の全slugを静的生成+ISR（`●`=SSG）。
+    `dynamicParams`はデフォルトで`true`のため、ビルド後に作られた新しい記事（事前生成リストに無いslug）も
+    初回アクセス時にレンダリングされてキャッシュされる（フォールバック動作）。中の`fetch`自体はどちらも
+    `next:{revalidate:7200, tags:[...]}`でキャッシュされる
   - 管理操作後は、どちらも`/api/revalidate`で該当タグを即時`revalidateTag`（時間ベース2時間を保険として併用）
 - **管理画面**（`/admin/**`）: 完全にCSR（Client Component、Cookie認証状態に依存する動的データのためキャッシュ無し）
 
