@@ -4,7 +4,17 @@ import { notFound } from "next/navigation";
 import { MarkdownContent } from "@/components/posts/MarkdownContent";
 import { TagBadge } from "@/components/ui/TagBadge";
 import { formatDate } from "@/lib/format";
-import { getPost } from "@/lib/public/api";
+import { getPost, getPosts } from "@/lib/public/api";
+
+// Pre-renders every known slug at build time (static + ISR, same as `/`).
+// Slugs created after the build still work: Next.js falls back to
+// rendering them on first request and caching the result, since
+// dynamicParams defaults to true.
+export async function generateStaticParams() {
+  const posts = await getPosts();
+
+  return posts.map((post) => ({ slug: post.slug }));
+}
 
 export default async function PostDetailPage({
   params,
