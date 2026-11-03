@@ -36,7 +36,7 @@
 | `title` | string | 最大30文字 |
 | `slug` | string, unique | 最大30文字、`alpha_dash` |
 | `body` | text | Markdown |
-| `thumbnail_url` | string, nullable | Railway Bucket上の画像URL |
+| `thumbnail_path` | string, nullable | Railway Bucket上のオブジェクトキー（URLではない。バケットは非公開のため、APIレスポンスでは`PostResource`が7日間有効な署名付きURLを`thumbnail_url`として計算して返す） |
 | `status` | string, default `'draft'` | PHP enum `PostStatus`でキャスト（`draft`/`published`） |
 | timestamps | | |
 
@@ -87,7 +87,7 @@ class Post extends Model
 
 | メソッド | パス | 認証 | 備考 |
 |---|---|---|---|
-| POST | `/api/login` | 不要 | |
+| POST | `/api/login` | 不要 | `throttle:login`でレート制限（email+IPキーで毎分5回まで） |
 | POST | `/api/logout` | 必要 | |
 | GET | `/api/user` | 必要 | |
 | GET | `/api/posts` | 不要 | 公開記事(`status=published`)のみ |
@@ -95,6 +95,7 @@ class Post extends Model
 | GET | `/api/tags` | 不要 | 全件、名前順 |
 | `apiResource` | `/api/admin/posts[/{post}]` | 必要 | `PostPolicy`による所有者ベース認可 |
 | `apiResource` | `/api/admin/tags[/{tag}]` | 必要 | Policy無し、`auth:sanctum`のみ |
+| POST | `/api/admin/uploads/thumbnail` | 必要 | 画像（最大5MB）をS3にアップロードし`thumbnail_path`とプレビュー用署名付きURLを返す |
 
 - 新規登録・パスワード変更・パスワードリセットのルートは無し
 - ページネーション・検索・タグによる絞り込みAPIは無し（全件取得、フロント側でフィルタ）
@@ -107,6 +108,10 @@ class Post extends Model
   区別しない**（列挙攻撃対策、失敗時は`email`フィールドに統一エラー）。成功時は`session()->regenerate()`
   （セッション固定化対策）。
 - `logout()`: `Auth::guard('web')->logout()` → `session()->invalidate()` → `session()->regenerateToken()`。
+- **ブルートフォース対策**: `AppServiceProvider`に`login`という名前のRateLimiterを登録し、
+  `email+IP`をキーに毎分5回まで制限（`routes/api.php`で`/api/login`に`throttle:login`を適用）。
+  IPベースのため、Railway環境では`bootstrap/app.php`で`trustProxies(at: '*')`を設定しないと
+  `Request::ip()`がRailwayの内部プロキシのIPを返してしまい、実質的に無効化される点に注意。
 
 ### 認可（PostPolicy）
 
@@ -163,10 +168,15 @@ Tagは所有権の概念が無い共有の分類語彙のため、Policyは作�
 
 ## 7. 画像ストレージ
 
-- `config/filesystems.php`の`FILESYSTEM_DISK`環境変数でディスク切り替え
-  - ローカル: `local`ディスク（`storage/app/public` + `storage:link`）
-  - 本番: `s3`ディスク（Railway Bucket、S3互換オブジェクトストレージ）
-- 記事作成・編集時にアップロードした画像はBucketに保存し、`posts.thumbnail_url`にURLのみ保持
+- `Admin\UploadController`は`FILESYSTEM_DISK`に関わらず常に`Storage::disk('s3')`を明示指定
+  （`league/flysystem-aws-s3-v3`）。ローカル・本番とも同じRailway Bucket（S3互換オブジェクトストレージ）を使う。
+- **Railway Bucketsは非公開**（公開バケット機能自体が無い）。保存時は`thumbnails/{uuid}.{ext}`という
+  オブジェクトキーのみを`posts.thumbnail_path`に保存し、APIレスポンス時に`PostResource`が
+  `Storage::disk('s3')->temporaryUrl($path, now()->addDays(7))`で7日間有効な署名付きURLを都度生成して返す
+  （2時間のISRキャッシュ窓より十分長い）。
+- アップロード自体が失敗した場合（`storeAs()`が`false`を返す。`'throw' => false`設定のため例外化されない）は
+  502を返す（`temporaryUrl()`に空パスを渡すと分かりにくいAWS SDKのバリデーションエラーになるため、
+  事前にチェックしている）。
 
 ## 8. CORS
 
@@ -185,8 +195,20 @@ Pest（Feature test）で以下をカバー:
 
 ## 10. デプロイ
 
-- Railwayに個別デプロイ、Dockerfile（Nginx + PHP-FPM + Supervisor構成）
-- 起動時に`php artisan migrate --force` + シード（失敗しても継続）
-- `railway.toml`でヘルスチェックパス`/up`
-- 環境変数: `FRONTEND_URL`, `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN`, `SESSION_COOKIE`,
-  `ADMIN_EMAIL`/`ADMIN_PASSWORD`, `FILESYSTEM_DISK`, Bucket接続情報
+- Railwayに個別デプロイ。`Dockerfile.prod`はcomposerイメージで`--no-dev`インストールする
+  ビルドステージと、`php:8.4-cli`で`php artisan serve`を直接動かすだけのシンプルな構成
+  （Nginx/PHP-FPM/Supervisorなどは使わない）。
+  - 本番環境にリポジトリ直下の`bootstrap/cache/packages.php`（devパッケージ込みで生成済み）を
+    そのまま持ち込むと`--no-dev`構成と食い違って起動時エラーになるため、ビルド時に一度削除して
+    `php artisan package:discover`で作り直している。
+- Railwayの**GitHub連携**（`railway service source connect`）で`main`ブランチを直接ウォッチしており、
+  pushされると自動でビルド・デプロイされる（GitHub Actions経由のデプロイは行っていない。CIのみ）。
+- デプロイ間の`deploy.preDeployCommand`で`sh -c "php artisan migrate --force && php artisan db:seed --force"`
+  を実行。**このコマンドが失敗した場合、デプロイ自体が止まる**（Railwayの仕様。「失敗しても継続」ではない）。
+  `&&`チェーンはシェル経由で呼ばないと機能しない点に注意（最初`sh -c`無しで書いていて、`migrate`だけ実行され
+  `db:seed`が静かにスキップされるハマりどころがあった）。
+- 環境変数: `FRONTEND_URL`, `SANCTUM_STATEFUL_DOMAINS`, `SESSION_SAME_SITE=none`, `SESSION_SECURE_COOKIE=true`,
+  `SESSION_COOKIE`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`, `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_BUCKET`/
+  `AWS_ENDPOINT`/`AWS_DEFAULT_REGION`（Bucket接続情報）
+- `bootstrap/app.php`で`trustProxies(at: '*')`を設定（Railwayの内部プロキシ経由でリクエストが来るため、
+  これが無いと`Request::ip()`がプロキシのIPを返してしまい、ログイン試行のレート制限が無効化される）。

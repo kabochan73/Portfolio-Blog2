@@ -4,32 +4,35 @@
 
 ```
 Blog-Portfolio2/
-├── backend/    Laravel（PHP 8.3+）— API専用バックエンド
+├── backend/    Laravel（PHP 8.4）— API専用バックエンド
 ├── frontend/   Next.js（App Router, TypeScript）
 └── docker-compose.yml  ローカル開発用（backend + frontend + DB連携）
 ```
 
 - バックエンドとフロントエンドは完全に分離した別プロセス（Laravelはビューを持たない純粋なJSON API）。
 - ローカルは `docker-compose.yml` で連携。
-- 本番は両方とも Railway に個別デプロイ。
-- **Sanctum SPA Cookie認証を採用するため、本番は独自ドメインを取得し、フロント/バックを同一トップレベルドメインの
-  異なるサブドメイン（例: `app.example.com` / `api.example.com`）で運用する**（Railwayの自動生成ドメイン
-  `*.up.railway.app` はサブドメインが異なるためCookie共有が成立しない）。
+- 本番は両方とも Railway に個別デプロイ（独自ドメインは未取得、Railwayの自動生成ドメイン`*.up.railway.app`をそのまま使用）。
+- **Sanctum SPA Cookie認証のCSRF（`X-XSRF-TOKEN`）はJSが`document.cookie`からトークンを読む仕組みのため、
+  本来はフロント/バックが同一ホスト名である必要がある。** backend/frontendは別ホスト名
+  （`*.up.railway.app`のサブドメインが異なる）で動いており、素の状態ではJSからCookieが読めずCSRF検証が常に失敗する。
+  これをNext.jsの`rewrites()`（`frontend/next.config.ts`）で`/api`・`/sanctum`をバックエンドへ透過プロキシし、
+  ブラウザからは常に同一オリジンに見える構成にすることで解決している（独自ドメイン取得は不要）。
 
 ## 技術スタック
 
 | 層 | 技術 |
 |---|---|
-| バックエンド | Laravel（最新安定版）, PHP 8.3+, Laravel Sanctum（SPA Cookie認証）, PostgreSQL, Pest（テスト）, Laravel Pint（整形） |
-| フロントエンド | Next.js（App Router）, React, TypeScript, Tailwind CSS, react-hook-form + zod, react-markdown + remark-gfm, rehype-pretty-code + shiki, Jest + Testing Library |
-| ストレージ | ローカル: `local`ディスク / 本番: `s3`ディスク（Railway Bucket, S3互換） |
-| インフラ | Railway（Dockerfileビルド）, Docker/Docker Compose（ローカル）, GitHub Actions（CI） |
+| バックエンド | Laravel 13, PHP 8.4, Laravel Sanctum（SPA Cookie認証）, PostgreSQL, Pest（テスト）, Laravel Pint（整形） |
+| フロントエンド | Next.js 16（App Router）, React 19, TypeScript, Tailwind CSS, react-hook-form + zod, react-markdown + remark-gfm, rehype-pretty-code + shiki, Jest + Testing Library |
+| ストレージ | ローカル/本番とも`s3`ディスク（Railway Bucket, S3互換、非公開バケットのため署名付きURLで配信） |
+| インフラ | Railway（Dockerfileビルド、GitHub連携で`main`への push を検知して自動デプロイ）, Docker/Docker Compose（ローカル）, GitHub Actions（CIのみ。デプロイはActionsからは行わない） |
 
 ## ドメインモデル
 
 - **User**（管理者）: 認証専用。ロール概念は無し。実運用は自分（1名）のみを想定するが、
   `Post`に`user_id`（投稿者）を持たせ、コード上は複数管理者にも耐えられる所有者ベース設計にしている。
-- **Post**（記事）: `title`, `slug`（unique）, `body`（Markdown）, `thumbnail_url`, `status`（`draft`/`published`、
+- **Post**（記事）: `title`, `slug`（unique）, `body`（Markdown）, `thumbnail_path`（S3オブジェクトキー、
+  APIレスポンスでは7日間有効な署名付きURLとして`thumbnail_url`に計算して返す）, `status`（`draft`/`published`、
   PHP enum `PostStatus`でキャスト）, `user_id`（投稿者）
 - **Tag**（タグ）: `name`（unique）
 - Post ⇔ Tag は多対多（中間テーブル `post_tag`、カスケード削除）
@@ -47,8 +50,12 @@ Blog-Portfolio2/
 
 ## レンダリング方針
 
-- **公開ページ**（`/`, `/posts/[slug]`）: Server Component + オンデマンドISR
-  （`cache:"force-cache"` + `next:{revalidate:7200, tags:[...]}`、管理操作後は`/api/revalidate`で即時再検証）
+- **公開ページ**はどちらもServer Componentだが、ページ単位のレンダリング方式は異なる
+  （`npm run build`の出力で確認可能）:
+  - `/`（一覧）: `generateStaticParams`不要な静的ルートのため静的生成+ISR（`○`=Static）
+  - `/posts/[slug]`（詳細）: `generateStaticParams`を使っていないためリクエストごとにサーバーでレンダリング
+    するSSR（`ƒ`=Dynamic）。ただし中の`fetch`自体は一覧側と同じく`next:{revalidate:7200, tags:[...]}`でキャッシュされる
+  - 管理操作後は、どちらも`/api/revalidate`で該当タグを即時`revalidateTag`（時間ベース2時間を保険として併用）
 - **管理画面**（`/admin/**`）: 完全にCSR（Client Component、Cookie認証状態に依存する動的データのためキャッシュ無し）
 
 ## API/画面の対応関係
@@ -57,8 +64,12 @@ Blog-Portfolio2/
 |---|---|
 | `GET /api/posts`, `GET /api/posts/{slug}`, `GET /api/tags`（認証不要） | `lib/public/api.ts`（Server Componentからのフェッチ、ISRキャッシュ付き） |
 | `GET /sanctum/csrf-cookie`（Sanctum標準） | `lib/http.ts`の`ensureCsrfCookie()` |
-| `POST /api/login`, `POST /api/logout`, `GET /api/user`（`auth:sanctum`） | `lib/admin/auth.ts`, `app/login/page.tsx` |
+| `POST /api/login`（`throttle:login`でレート制限）, `POST /api/logout`, `GET /api/user`（`auth:sanctum`） | `lib/admin/auth.ts`, `app/login/page.tsx` |
 | `/api/admin/posts`, `/api/admin/tags`（`apiResource`, `auth:sanctum` + PostPolicy） | `lib/admin/api.posts.ts`, `lib/admin/api.tags.ts` |
+| `POST /api/admin/uploads/thumbnail`（`auth:sanctum`） | `lib/admin/api.uploads.ts`。サムネイル画像をS3にアップロードし、`thumbnail_path`とプレビュー用の署名付きURLを返す |
 | （管理操作後）`POST /api/revalidate` | Next.js自身のRoute Handler。ISRタグの再検証 |
+
+上記すべて、ブラウザからは`frontend/next.config.ts`の`rewrites()`経由で同一オリジンとして呼ばれる
+（`/api/*`, `/sanctum/*`をバックエンドへ透過プロキシ）。
 
 詳細は [backend.md](./backend.md) / [frontend.md](./frontend.md) を参照。

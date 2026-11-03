@@ -24,7 +24,7 @@ Laravel + Next.js　構成のシンプルなブログアプリです。
 
 | 層             | 技術                                                                                                                             |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| バックエンド   | Laravel 13 / PHP 8.3+ / Laravel Sanctum（SPA Cookie認証）/ PostgreSQL / Pest / Laravel Pint                                      |
+| バックエンド   | Laravel 13 / PHP 8.4 / Laravel Sanctum（SPA Cookie認証）/ PostgreSQL / Pest / Laravel Pint                                       |
 | フロントエンド | Next.js 16（App Router）/ React 19 / TypeScript / Tailwind CSS / react-hook-form + zod / react-markdown / Jest + Testing Library |
 | ストレージ     | Railway Buckets（S3互換オブジェクトストレージ、署名付きURLで配信）                                                               |
 | インフラ       | Railway（Dockerfileビルド、GitHub連携による自動デプロイ）/ Docker Compose（ローカル）/ GitHub Actions（CI）                      |

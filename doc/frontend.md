@@ -29,9 +29,10 @@ frontend/
 │   ├── api/revalidate/route.ts      ISR再検証エンドポイント
 │   └── not-found.tsx
 ├── components/
-│   ├── posts/       PostList, PostBrowser, PostForm など
-│   ├── tags/         Sidebar など
-│   └── admin/         AdminHeader（ログアウトボタン含む）, AdminPostList, AdminPostBrowser など
+│   ├── ui/            Button, Card, Pill, TagBadge, TextInput（公開/管理共通の基礎UI）
+│   ├── posts/          PostList, PostBrowser, PostForm, MarkdownContent/Preview など
+│   ├── tags/            Sidebar（公開・管理画面で共用、propsでデータだけ渡し分け）
+│   └── admin/            AdminHeader（ログアウトボタン含む）, AdminPostList
 ├── lib/
 │   ├── http.ts                     共通fetchラッパー、ApiErrorクラス、CSRF処理(ensureCsrfCookie)
 │   ├── public/
@@ -39,10 +40,16 @@ frontend/
 │   └── admin/
 │       ├── api.posts.ts            管理用Post CRUD
 │       ├── api.tags.ts             管理用Tag CRUD
-│       └── auth.ts                 login/logout/checkAuth、認証状態(useAuthState)
+│       ├── api.uploads.ts          サムネイルアップロード
+│       ├── auth.ts                 login/logout/checkAuth、認証状態(useAuthState)
+│       └── revalidate.ts           /api/revalidateを叩くヘルパー
+├── tests/                           ソースツリーをミラーしたJestテスト（コロケーションしない）
 ├── types/
 └── proxy.ts                        `/admin`配下のcookie有無チェック
 ```
+
+- 当初`components/ui/`は無く、各ページで直接スタイルを書いていたが、デザインが固まった段階で
+  `Button`/`Card`/`Pill`/`TagBadge`/`TextInput`として共通化した。
 
 ## 3. ページ構成
 
@@ -68,12 +75,18 @@ frontend/
 
 ## 4. レンダリング方針
 
-- **公開ページ**: Server Component + オンデマンドISR。
+- **公開ページ**はどちらもServer Componentで、どちらも同じfetchキャッシュ設定を使う:
   ```ts
   fetch(url, { next: { revalidate: 7200, tags: [...] } })
   ```
   - `/`: タグ`["posts", "tags"]`
   - `/posts/[slug]`: タグ`["posts", "post:${slug}"]`
+
+  ただし**ページ単位のレンダリング方式はfetchの設定だけで決まらない**。`/`は静的ルートなので
+  ビルド/初回アクセス時に静的生成されるISR（`npm run build`の出力で`○`=Static）。`/posts/[slug]`は
+  `generateStaticParams`を使っていないため、リクエストごとにNext.jsサーバーがその場でHTMLを生成する
+  SSR（同出力で`ƒ`=Dynamic）。中の`fetch`自体はどちらも同じく2時間キャッシュされるので、
+  「詳細ページはHTML生成だけ毎回サーバーでやるが、データ取得自体は一覧と同じくキャッシュされる」という状態。
   - 管理画面での作成・更新・削除後、`/api/revalidate`を呼んで該当タグを即時`revalidateTag`（時間ベース2時間を保険として併用）
   - タグ絞り込みなどインタラクティブな部分だけを薄いClient Componentに切り出し、Server Component側で
     事前にレンダリング済みのリストをpropsとして渡す（Client Component側でデータフェッチはしない）
@@ -102,20 +115,42 @@ frontend/
 - ログイン成功時は`setAuthenticatedUser(user)`して`/admin`へ遷移。
 - **`AdminHeader`にログアウトボタン**を設置。ログアウトは`await logout(); router.push("/")`。
 
+### 同一オリジン化プロキシ（本番で必須だった対応）
+
+`lib/http.ts`のCSRF対応は、`/sanctum/csrf-cookie`が発行する`XSRF-TOKEN`Cookieを`document.cookie`から
+JSで読み取り、`X-XSRF-TOKEN`ヘッダーに載せて送る方式。**この`document.cookie`は同じホスト名のCookieしか
+見えない。** backend/frontendは本番で別ホスト名（`*.up.railway.app`のサブドメインが異なる）のため、
+素の状態ではこの読み取りが常に失敗し、ログインを含む全ての状態変更リクエストが`CSRF token mismatch`
+（419）で落ちる（ローカルは`localhost`の別ポート同士なのでCookieが共有され、気づきにくい）。
+
+対策として`next.config.ts`の`rewrites()`で`/api/:path*`・`/sanctum/:path*`をバックエンドへ透過プロキシし、
+ブラウザからは常に自分自身のオリジンに見えるようにしている。これによりSanctumのセッション/XSRF-TOKEN
+Cookieもフロントエンドのホスト名で発行されたことになり、`document.cookie`から正しく読める。
+`NEXT_PUBLIC_API_URL`は（バックエンドの絶対URLではなく）相対パス`/api`のみで、実際のプロキシ先は
+サーバー専用の`API_URL`環境変数から`next.config.ts`が解決する。
+
+**注意点**: `rewrites()`の宛先URLは`next build`実行時に`.next/routes-manifest.json`へ固定され、
+リクエストごとに再評価されるわけではない。そのため`API_URL`は（ブラウザに公開しないという理由だけでなく）
+Dockerのビルド時ARGとして明示的に渡す必要がある（`frontend/Dockerfile.prod`）。これを忘れると
+ビルド時のデフォルト値（`localhost:8000`）のままプロキシ先が固定され、本番で`ECONNREFUSED`になる。
+
 ## 7. UIデザイン
 
 デザインモックアップ（スクリーンショット）を元にした仕様。
 
 - **全体**: グレースケール基調、角丸カードデザイン。**ダークモードは実装しない**（単一のライトテーマ）。
-- **レスポンシブ対応必須**: モバイル幅でサイドバーが記事一覧/詳細の下に回り込む、ヘッダーも縮小対応。
+- **レスポンシブ対応必須**: モバイル幅ではサイドバーが記事一覧の下に回り込む。PC幅（`sm:`以上）では
+  サイドバーが`position: sticky`でスクロールしても上部に固定される。ヘッダーも縮小対応。
 - **ヘッダー**: サイトタイトル＋サブタイトル、ナビ（Home/Articles）。Loginリンクは表示しない。
-- **ホーム**: 記事カード（サムネイル画像・タイトル・タグpill・日付・矢印アイコン。技術タグバッジや説明文(excerpt)は無し）
-  ＋サイドバー（プロフィールカード：アバター・名前・肩書き・自己紹介・SNSリンク／タグ一覧：件数付き、クリックでクライアント側絞り込み）
+- **ホーム**: 記事カード（サムネイル画像・タイトル・タグpill・日付。技術タグバッジや説明文(excerpt)は無し）
+  ＋サイドバー（プロフィールカード：アバター・名前・自己紹介／タグ一覧：件数付き、クリックでクライアント側絞り込み）。
+  記事は**古い順**（`oldest()`）に表示。
 - **記事詳細**: 「← 一覧に戻る」リンク、タグpill、タイトル、日付のみ（読了時間・シェア機能は無し）、
   アイキャッチ画像、Markdown本文（見出し・段落・シンタックスハイライト付きコードブロック）。
   **サイドバーは無し**（本文中心の1カラムレイアウト）。関連記事機能も無し
   （実装時にサイドバーのタグが詳細ページでは非インタラクティブになる不自然さから、シンプル化のため削除した）。
-- **プロフィール情報**（名前・肩書き・自己紹介・SNSリンク）はDBに持たず、フロントエンドにハードコード
+- **プロフィール情報**（名前・自己紹介・写真）はDBに持たず、フロントエンドにハードコード
+  （`components/tags/Sidebar.tsx`。SNSリンクは無し）
 
 ## 8. Markdown
 
@@ -129,6 +164,12 @@ frontend/
 - react-hook-form + zod
 - Laravelの422バリデーションエラーをreact-hook-formの`setError`にマッピング（フィールド一致するもののみ、
   一致しなければフォーム末尾の汎用エラーにフォールバック）
+- **サムネイル画像アップロード**（`PostForm`）: ファイル選択時に`lib/admin/api.uploads.ts`の
+  `uploadThumbnail()`で即座にS3へアップロードし、返ってきた署名付きURLでプレビュー表示。
+  フォーム送信時の`thumbnail_path`はアップロードで触った場合のみペイロードに含める
+  （未操作時は`undefined`のまま送らず、既存のサムネイルを上書きしないようにしている）。
+  アップロードは`FormData`で送るため、`lib/http.ts`の`authFetch`は`body instanceof FormData`の場合
+  `Content-Type`を強制上書きしない（ブラウザが自動設定するmultipartのboundaryを壊さないため）。
 
 ## 10. エラーハンドリング
 
@@ -137,11 +178,23 @@ frontend/
 
 ## 11. テスト
 
-- Jest + Testing Library。表示系コンポーネント（`PostList`, `Sidebar`など）を中心にテスト。
+- Jest + Testing Library。`tests/`配下にソースツリーをミラーして配置（コロケーションはしない）。
+- UIコンポーネント（`Button`, `Card`, `Pill`, `TagBadge`, `TextInput`）だけでなく、`lib/`層
+  （`http.ts`, `admin/auth.ts`, `admin/revalidate.ts`, `admin/api.posts.ts`/`api.tags.ts`, `public/api.ts`）
+  と`/api/revalidate`のRoute Handlerもカバー。49 tests。
+- `jest.config.ts`に`moduleNameMapper`で`@/*`エイリアスを明示登録している（SWCは通常のimportを
+  ビルド時に解決するが、`jest.mock("@/...")`の文字列引数はJest自身の解決系を通るため別途必要）。
 
 ## 12. デプロイ
 
-- `next.config.ts`で`output:"standalone"`
-- Railwayに個別デプロイ（マルチステージDockerfile、ビルド時に`NEXT_PUBLIC_API_URL`等をビルド引数として注入）
-- 環境変数: `NEXT_PUBLIC_API_URL`（ブラウザ→backend直接）, `API_URL`（Next.jsサーバー→backend）,
-  `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SESSION_COOKIE_NAME`
+- `next.config.ts`で`output:"standalone"` + `rewrites()`（6章参照）
+- Railwayに個別デプロイ。`Dockerfile.prod`はマルチステージ（deps → builder → runner）で、
+  standalone出力をコピーするだけの軽量な最終イメージ。
+- Railwayの**GitHub連携**（`railway service source connect`）で`main`への push を直接ウォッチしており、
+  自動でビルド・デプロイされる（GitHub Actions経由のデプロイは行っていない。CIのみ）。
+- 環境変数:
+  - `NEXT_PUBLIC_API_URL=/api`（相対パス。ブラウザは`rewrites()`経由でバックエンドへプロキシされる）
+  - `API_URL`（Next.jsサーバー→backend。`rewrites()`の宛先解決にも使う）
+  - `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SESSION_COOKIE_NAME`
+  - `NEXT_PUBLIC_*`群に加えて`API_URL`も**ビルド時ARG**として`Dockerfile.prod`に渡す必要がある
+    （6章の注意点を参照。`rewrites()`の宛先はビルド時に固定されるため）。
